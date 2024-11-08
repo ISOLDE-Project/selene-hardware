@@ -70,7 +70,7 @@ entity io_sys is
     ahbso      : out ahb_slv_out_vector_type(0 downto 0);
     ahbsov_pnp : in  ahb_slv_out_vector;
     --APB BUS
-    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 + CFG_GRDMAC2 downto 0);
+    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 + CFG_GRDMAC2 + CFG_AXI_SAFETI_EN downto 0);
     apbo       : out apb_slv_out_vector;
     --AHBJTAG
     tck        : in  std_ulogic;
@@ -200,7 +200,7 @@ architecture rtl of io_sys is
   constant pidx_apbuart485_0    : integer := pidx_canfd2 + CFG_UART2_ENABLE;
 
   constant pidx_dma     : integer := pidx_apbuart485_0 + CFG_UART2_ENABLE + CFG_GRDMAC2;
-  constant pidx_total   : integer := pidx_dma + 1;
+  constant pidx_total   : integer := pidx_dma + CFG_AXI_SAFETI_EN + 1;
 
   --IOMMU
   -- System burst length in 32-bit words

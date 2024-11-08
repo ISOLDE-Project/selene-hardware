@@ -320,10 +320,13 @@ package config is
   constant CFG_SAFEDE_EN : integer := 1; -- Enable safeDE
   constant CFG_SAFEDE_VERSION : integer := 0; -- 4 bits for version
 
+-- SafeTI cores
+  constant CFG_AXI_SAFETI_EN : integer range 0 to 6 := 1;  -- How many SafeTI at AXI
+
 -- AXI xbar configuration
 --The following line "CFG_AXI_N_INITIATORS" must not contain labels, logic operations or comments due to preprocesor scripts
---the current value "7" corresponds to 1(gpp) + 6 (HLSinf have 6 ports)
-  constant CFG_AXI_N_INITIATORS : integer := 7;
+--the current value "8" corresponds to 1(gpp) + 6 (HLSinf have 6 ports) + CFG_AXI_SAFETI_EN
+  constant CFG_AXI_N_INITIATORS : integer := 8;
   constant CFG_AXI_N_TARGETS : integer := 1;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
