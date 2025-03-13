@@ -1,214 +1,167 @@
 #include <stdio.h>
-#include "util.h"
 #include <stdint.h>
+#include <bcc/bcc.h>  // For secondary core booting
 #include "injector.h"
 
 #define __USING_IDE__
 #define __DEBUG__
 
-// Flush address (L2 uBench)
-#define flush_addr  0x07000000
-// L2 base address
-#define L2_base_addr 0xFFFF0000
+    //////////////////////////
+   // SafeTI configuration //
+  //////////////////////////
 
-  ////////////////////////////////////
- // SafeTI benchmark configuration //
-////////////////////////////////////
-
-// Read a write address where the injector attacks
-#define attack_addr 0x0A000000
-// Maximum transaction/delay SIZE (only power of 2s) to sweep during TUA execution
-#define MAX_SIZE 0x01000000
-
+// Set a target address for SafeTI accesses to initiate from
+#ifndef __TARGET_ADDR__
+  #define __TARGET_ADDR__ 0x0A000000
+#endif
 
 // Scripted descriptor type, size and sweep option from Makefile
-// ubench -> 2=ST_L2HIT, 3=LD_L2HIT, 4=LD_L2MISS, 5=ST_L2MISS
-// type   -> 1=READ,      2=WRITE
+// Type of access ->  1=READ, 2=WRITE
 #ifndef  __INJ_TYPE__
-  #define __INJ_TYPE__ 0
+  #define __INJ_TYPE__ INJ_OP_READ
 #endif
+// Access size in bytes
 #ifndef __INJ_SIZE__
-  #define __INJ_SIZE__ 0
+  #define __INJ_SIZE__ 1024
 #endif
+// Delay in number of clock cycles
 #ifndef __INJ_DELAY__
-  #define __INJ_DELAY__ 0
+  #define __INJ_DELAY__ 20
 #endif
-#ifndef __INJ_COUNT__
-  #define __INJ_COUNT__ 0
-#endif
+// Set SafeTI traffic injection in loop mode
 #ifndef __INJ_LOOP__
   #define __INJ_LOOP__ 0
 #endif
+// Select SafeTI module from the implemented in HW (review injector.h and HW)
 #ifndef __INJ_SELECTOR__
-  #define __INJ_SELECTOR__ 0
+  #define __INJ_SELECTOR__ SAFETI_AXI_0
 #endif
+
 
 // If needed if you do not want to the IDE grais-out the code
 #ifndef __CORE__
   #define __CORE__
 #endif
 
-//DO NOT REMOVE, USED TO INITIALIZE THE CORES
-void thread_entry(int cid, int nc)
-{
-  return;
+// Compile variable for distinction between simulation and FPGA execution
+#ifndef __FPGA__
+  #define __FPGA__ 0
+#endif
+
+#ifndef NCPU                // Set number of cores to use during experiment
+  #define NCPU (1U)         // 4 or 6 (depending on the bitstream configuration)
+#endif
+
+// Dumbo sleep function
+void sleep(unsigned int sleep_cnt) {
+  __asm__ __volatile__ (
+    ".sleep_loop%=:   \n\t"
+    "addi %0, %0, -1   \n\t"
+    "bne  %0, zero, .sleep_loop%= \n\t"
+    ://   %0
+    : "r"(sleep_cnt)
+  );
 }
 
-#ifndef __UBENCH_N_CORES__                // Set number of cores to use during ubench
-  #define N_CORES           (6U)          // 4 or 6 (depending on the bitstream configuration)
-#else
-  #define N_CORES           __UBENCH_N_CORES__
-#endif
+// Secondary CPU cores programs
+void secondary_cores_function() {
+  int core;
+  __asm__ __volatile__("csrr %0, 0xf14"  : "=r"(core));
+  switch(core) {
+    case 0:
+      break;
+    default:
+      while(1);
+} }
 
-#if (__FLUSH_METHOD__ == 0)
- #define __FLUSH_NAME__  "No flush"
-#elif (__FLUSH_METHOD__ == 1)
- #define __FLUSH_NAME__  "L2 flush flag"
-#elif (__FLUSH_METHOD__ == 2)
- #define __FLUSH_NAME__  "1MB LD ubench"
-#elif (__FLUSH_METHOD__ == 3)
- #define __FLUSH_NAME__  "1MB ST ubench"
-#endif
 
-#if (__INJ_TYPE__ == INJ_OP_DELAY)
- #define __INJ_TYPE_NAME__   "NO OPERATION (DELAY)"
-#elif (__INJ_TYPE__ == INJ_OP_READ)
- #define __INJ_TYPE_NAME__   "READS"
-#elif (__INJ_TYPE__ == INJ_OP_WRITE)
- #define __INJ_TYPE_NAME__   "WRITES"
-#elif (__INJ_TYPE__ == INJ_OP_READ_FIX)
-  #define __INJ_TYPE_NAME__  "FIXED ADDRESS READS"
-#elif (__INJ_TYPE__ == INJ_OP_WRITE_FIX)
- #define __INJ_TYPE_NAME__   "FIXED ADDRESS WRITES"
-#elif (__INJ_TYPE__ == INJ_OP_READ_SEQ)
-  #define __INJ_TYPE_NAME__  "SEQUENTIAL ADDRESS READS"
-#elif (__INJ_TYPE__ == INJ_OP_WRITE_SEQ)
-  #define __INJ_TYPE_NAME__  "SEQUENTIAL ADDRESS WRITES"
-#else
- #define __INJ_TYPE_NAME__   "ERROR: DESCRIPTOR TYPE NOT SUPPORTED"
-#endif
+#if(__FPGA__ != 0)
+// Secondary CPU cores enable function
+void bootSecondaryCores(int ncpu) {
+  uint64_t stack[ncpu-1][4096 / 8];
+  for(int i = 1; i < ncpu; i++) {
+    __bcc_startinfo[i].pc = &secondary_cores_function;
+    __bcc_startinfo[i].sp = (uintptr_t)&stack[i-1][0];
+    bcc_start_processor(i);
+} }
+#endif //__FPGA__ != 0
 
-void inj_program_custom(unsigned int SEL, unsigned int DESC_TYPE, unsigned int SIZE, unsigned int ATTACK_ADDR) {
+
+// Template for SafeTI traffic descriptor program
+void inj_program_custom(unsigned int SEL, unsigned int DELAY_SIZE, unsigned int DESC_TYPE, unsigned int SIZE, unsigned int ATTACK_ADDR) {
   unsigned int i;
   inj_reset(SEL);
   inj_reset_counters(SEL);
 
+  // 524288 is max size for a single transaction/delay descriptor,
+  // thus, use multiple descriptors if needed. First program DELAY descriptors.
+  for(i = 0; DELAY_SIZE > 524288; i++) {
+    // (SEL, DESC_TYPE, SIZE, DESC_ATTACK_ADDR, COUNT, LAST, INTERRUPTION_EN)
+    program_descriptor(SEL, INJ_OP_DELAY, 524288, 0, 0, 0, 0);
+    DELAY_SIZE = DELAY_SIZE - 524288;
+  }
+  program_descriptor(SEL, INJ_OP_DELAY, DELAY_SIZE, 0, 0, 0, 0);
+
+  // Then, program which traffic type is set by DESC_TYPE
   for(i = 0; SIZE > 524288; i++) {
     // Here put the descriptor you want to be programmed
     // (SEL, DESC_TYPE, SIZE, DESC_ATTACK_ADDR, COUNT, LAST, INTERRUPTION_EN)
     program_descriptor(SEL, DESC_TYPE, 524288, ATTACK_ADDR+0x80000*i, 0, 0, 0);
     SIZE = SIZE - 524288;
   }
-  printf("i = %u\n", i);
   program_descriptor(SEL, DESC_TYPE, SIZE, ATTACK_ADDR+0x80000*i, 0, 1, 0);
+
   // At last, start traffic injector
   // (SEL, ENABLE, QUEUE_EN, INT_PROG_COMPL, INT_ERROR, INT_NET_ERROR, FREEZE_INT)
   program_configuration(SEL, 1, __INJ_LOOP__, 1, 0, 0, 0);
 }
 
 int main(void) {
-  #ifdef __CORE__
-    int core;
-    unsigned int *p;
-    //Read mharid csr
-    core=read_csr(0xf14);//CSR_MHARTID
-    switch(core) {
-      case 0:
-        break;
-
-      case 1:
-        while(N_CORES < 2);
-        break;
-
-      case 2:
-        while(N_CORES < 3);
-        break;
-
-      case 3:
-        while(N_CORES < 4);
-        break;
-
-      case 4:
-        while(N_CORES < 5);
-        break;
-
-      case 5:
-        while(N_CORES < 6);
-        break;
-
-      default:
-        while(1);
-    }
-
-    switch (core) {
-      case 0:
-        //CORE 0 CODE
-        printf("START EXPERIMENTS\n");
-        unsigned int inj_size, inj_delay, inj_count, inj_req_cnt, inj_prog_compl_cnt, L2_access, L2_misses;
-
-        inj_size  = __INJ_SIZE__;
-        inj_delay = __INJ_DELAY__;
-        inj_count = __INJ_COUNT__;
-
-        // Reset SafeTI counters
-        inj_reset_counters(__INJ_SELECTOR__);
-
-        // Write the injector program (sel,type,size,wraddr)
-        // 524288 is max size for a single transaction descriptor
-        // 0x80100000 PMU, 0xfc085000 SafeTI AXI
-        if (inj_size != 0)
-          inj_program_custom(__INJ_SELECTOR__, __INJ_TYPE__, inj_size, attack_addr);
-
-        // Let SafeTI do some rounds
-        for(unsigned int sleep; sleep < 10000; sleep++);
-
-        //Disable injector while letting to finish any ongoing transaction
-        if (inj_size != 0) {
-          inj_reset(__INJ_SELECTOR__);
-          while(inj_check_run(__INJ_SELECTOR__) != 0) {
-            printf("Waiting for injector to stop.\n");
-          }
-        }
-
-        printf("FINISHED EXPERIMENT\n");
-        break;
-
-      case 1:
-        //CORE 1 CODE
-        //Pointer for Core 1
-        while(1);
-        break;
-
-      case 2:
-        //CORE 2 CODE
-        //Pointer for Core 2
-        while(1);
-        break;
-
-      case 3:
-        //CORE 3 CODE
-        //Pointer for Core 3
-        while(1);
-        break;
-
-      case 4:
-        //CORE 4 CODE
-        //Pointer for Core 4
-        while(1);
-        break;
-
-      case 5:
-        //CORE 5 CODE
-        //Pointer for Core 5
-        while(1);
-        break;
-    }
-
+  // Initialize secondary CPUs
+#if(__FPGA__ != 0)
+  bootSecondaryCores(NCPU);
 #else
-  //This shall never be reached if makefile is setup properly
-  while(1)
-    printf("__CORE__ not defined\n");
-#endif
+  secondary_cores_function();
+#endif //__FPGA__ != 0
+  sleep(50); // Let Secondary cores catch up
 
-    return 0;
+
+  // CPU0 main program
+  printf("\nSTART EXPERIMENTS\n\n");
+  unsigned int inj_size, inj_req_cnt, inj_prog_compl_cnt;
+
+  inj_size  = __INJ_SIZE__;
+
+  // Reset SafeTI counters
+  inj_reset_counters(__INJ_SELECTOR__);
+
+  // Write the descriptor program and start traffic injection
+  if(inj_size != 0)
+    inj_program_custom(__INJ_SELECTOR__, __INJ_DELAY__, __INJ_TYPE__, inj_size, __TARGET_ADDR__);
+
+  // Let SafeTI do some rounds
+  sleep(5000);
+
+  // Disable injector while letting to finish any ongoing transaction
+  if(inj_size != 0) {
+    inj_reset(__INJ_SELECTOR__);
+    while(inj_check_run(__INJ_SELECTOR__) != 0) {
+      printf("Waiting for injector to stop.\n");
+    }
+  }
+
+  // SafeTI interruptions are generated by set flags during program_configuration().
+  // The set flag INT_PROG_COMPL allows to count the number of times SafeTI completed
+  // its programming, which should be no greater than 1 if __INJ_LOOP__ = 0.
+  // The number of SafeTI counter interruptions may vary depending on the configuration.
+  inj_req_cnt = inj_read_counter(__INJ_SELECTOR__, INJ_CNT_ACCESS);
+  inj_prog_compl_cnt = inj_read_counter(__INJ_SELECTOR__, INJ_CNT_INT);
+
+  printf("Number of SafeTI accesses: %u\n", inj_req_cnt);
+  printf("Number of SafeTI interruptions: %u\n", inj_prog_compl_cnt);
+
+  printf("\nFINISHED EXPERIMENT\n\n");
+
+
+  return 0;
 }

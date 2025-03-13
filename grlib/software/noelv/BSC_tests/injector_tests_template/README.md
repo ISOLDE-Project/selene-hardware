@@ -1,36 +1,27 @@
-Just write whatever program you want on a folder inside of source, add it on
-the "bmarks" variable on the Makefile, while also adding the directory of the
-libraries your software requires on "incs" and on the .riscv recipe.
+This specific "safeti_axi" program is a template of traffic injection test using 
+the SafeTI module integrated within the SELENE SoC. Details of the injection are
+detailed inside the Makefile under the "Experiment parameters" section.
 
-The variables at the Makefile can also be used to program easily many things.
+For more up-to-date information in relation with SafeTI drivers, checkout 
+drivers/safeti/injector.c commentaries and source/safeti_axi/main.c example.
 
 ----------------------------------------------
 
 make clean
-When compiling we need to specify the experiments we launch, if not lines 13-19
-in Makefile puts default values
-make pmu_ubench.riscv
-
-to run:
-
-After switching the BASE_ADDR in pmu_hw.h looks like the PMU is configured,
-However, need to check the counters since looks like something is weird
+Erase "build" folder.
 
 ----------------------------------------------
 Instructions:
 
-To compile the software:
-  make "source folder".riscv
+To compile library drivers to the "build" folder:
+  make drivers_
 
-To translate the riscv binary to srec and put it on the testbench directory:
-  make "source folder".srec
+To compile the C code:
+  make elf
 
-To decompile the riscv binary to assembler:
-  make "source folder".dump
-
-To do everything (make sure there're no errors in the software or lack of
-libraries in the Makefile):
-  make "source folder".
+To compile all:
+  make all
 
 To clean generated files by this Makefile:
   make clean
+
