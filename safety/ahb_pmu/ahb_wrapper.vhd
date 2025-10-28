@@ -125,7 +125,6 @@ pmu_inst: pmu_ahb
         -- PMU signals
         events_i => events_i,
         intr_overflow_o => irqvec(29),
-        intr_quota_o => irqvec(31),
         intr_MCCU_o => intr_MCCU,
         intr_RDC_o => irqvec(30),
         en_hwquota_o => hardware_quota_active
@@ -169,7 +168,6 @@ pmu_inst: pmu_ahb
         -- PMU signals
         events_i => events_i,
         intr_overflow_o => irqvec(29),
-        intr_quota_o => irqvec(31),
         intr_MCCU_o => intr_MCCU,
         intr_RDC_o => irqvec(30),
         en_hwquota_o => hardware_quota_active

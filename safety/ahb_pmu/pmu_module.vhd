@@ -54,7 +54,6 @@ package pmu_module is
 
   type pmu_intr_out_type is record
     intr_overflow_o : std_ulogic;
-    intr_quota_o : std_ulogic; 
     intr_MCCU_o : std_logic_vector(PMU_NCPU-1 downto 0);
     intr_RDC_o : std_ulogic; 
   end record;
@@ -116,7 +115,6 @@ package pmu_module is
       -- PMU signals
       events_i    : in std_logic_vector(N_SOC_EV-1 downto 0); 
       intr_overflow_o : out std_ulogic;
-      intr_quota_o : out std_ulogic; 
       intr_MCCU_o : out std_logic_vector(MCCU_N_CORES-1 downto 0);
       intr_RDC_o : out std_ulogic;
       en_hwquota_o : out std_logic
