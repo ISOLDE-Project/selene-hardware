@@ -76,6 +76,13 @@ entity pads is
     emdc         : out   std_ulogic;
     eint         : in    std_ulogic;
     erst         : out   std_ulogic;
+    -- AXI Chip2Chip physical link (FMC)
+    axi_c2c_selio_rx_data_in_0       : in  std_logic_vector(14 downto 0);
+    axi_c2c_selio_rx_diff_clk_in_p_0 : in  std_logic;
+    axi_c2c_selio_rx_diff_clk_in_n_0 : in  std_logic;
+    axi_c2c_selio_tx_data_out_0      : out std_logic_vector(14 downto 0);
+    axi_c2c_selio_tx_diff_clk_out_p_0: out std_logic;
+    axi_c2c_selio_tx_diff_clk_out_n_0: out std_logic;
     --UART
     uart_rx      : in    std_ulogic;
     uart_tx      : out   std_ulogic;
@@ -581,6 +588,13 @@ begin
       -- Ethernet
       sgmiii       => sgmiii,
       sgmiio       => sgmiio,
+      -- AXI Chip2Chip physical link (FMC)
+      axi_c2c_selio_rx_data_in_0        => axi_c2c_selio_rx_data_in_0,
+      axi_c2c_selio_rx_diff_clk_in_p_0  => axi_c2c_selio_rx_diff_clk_in_p_0,
+      axi_c2c_selio_rx_diff_clk_in_n_0  => axi_c2c_selio_rx_diff_clk_in_n_0,
+      axi_c2c_selio_tx_data_out_0       => axi_c2c_selio_tx_data_out_0,
+      axi_c2c_selio_tx_diff_clk_out_p_0 => axi_c2c_selio_tx_diff_clk_out_p_0,
+      axi_c2c_selio_tx_diff_clk_out_n_0 => axi_c2c_selio_tx_diff_clk_out_n_0,
       --AHBJTAG
       tck          => tck,
       tms          => tms,
