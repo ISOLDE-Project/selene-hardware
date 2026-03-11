@@ -2571,13 +2571,21 @@ set_property BITSTREAM.CONFIG.CONFIGRATE 31.9 [current_design]
 
 #CAN PINS
 
-set_property PACKAGE_PIN BF12 [get_ports {can_tx[0]}] ;
-set_property PACKAGE_PIN BF11 [get_ports {can_rx[0]}] ;
-set_property PACKAGE_PIN BC11 [get_ports {can_stb[0]}] ;
+#set_property PACKAGE_PIN BF12 [get_ports {can_tx[0]}] ;
+#set_property PACKAGE_PIN BF11 [get_ports {can_rx[0]}] ;
+#set_property PACKAGE_PIN BC11 [get_ports {can_stb[0]}] ;
 
-set_property PACKAGE_PIN AK12 [get_ports {can_tx[1]}] ;
-set_property PACKAGE_PIN AL12 [get_ports {can_rx[1]}] ; 
-set_property PACKAGE_PIN AV10 [get_ports {can_stb[1]}] ;
+#set_property PACKAGE_PIN AK12 [get_ports {can_tx[1]}] ;
+#set_property PACKAGE_PIN AL12 [get_ports {can_rx[1]}] ; 
+#set_property PACKAGE_PIN AV10 [get_ports {can_stb[1]}] ;
+
+set_property PACKAGE_PIN V33 [get_ports {can_tx[0]}] ;
+set_property PACKAGE_PIN V34 [get_ports {can_rx[0]}] ;
+set_property PACKAGE_PIN AT35 [get_ports {can_stb[0]}] ;
+
+set_property PACKAGE_PIN V32 [get_ports {can_tx[1]}] ;
+set_property PACKAGE_PIN U33 [get_ports {can_rx[1]}] ; 
+set_property PACKAGE_PIN Y32 [get_ports {can_stb[1]}] ;
 
 set_property IOSTANDARD LVCMOS18 [get_ports {can_tx[0]}] ;
 set_property IOSTANDARD LVCMOS18 [get_ports {can_rx[0]}] ;
@@ -2640,13 +2648,13 @@ set_property PACKAGE_PIN BC15 [get_ports {axi_c2c_selio_tx_data_out_0[11]}]
 set_property PACKAGE_PIN BF15 [get_ports {axi_c2c_selio_tx_data_out_0[12]}]
 set_property PACKAGE_PIN BE15 [get_ports {axi_c2c_selio_tx_data_out_0[13]}]
 set_property PACKAGE_PIN BB14 [get_ports {axi_c2c_selio_tx_data_out_0[14]}]
-set_property PACKAGE_PIN BA14 [get_ports {axi_c2c_selio_tx_data_out_0[15]}]
-set_property PACKAGE_PIN BB12 [get_ports {axi_c2c_selio_tx_data_out_0[16]}]
-set_property PACKAGE_PIN BB13 [get_ports {axi_c2c_selio_tx_data_out_0[17]}]
-set_property PACKAGE_PIN BA15 [get_ports {axi_c2c_selio_tx_data_out_0[18]}]
-set_property PACKAGE_PIN BA16 [get_ports {axi_c2c_selio_tx_data_out_0[19]}]
-set_property PACKAGE_PIN BC13 [get_ports {axi_c2c_selio_tx_data_out_0[20]}]
-set_property PACKAGE_PIN BC14 [get_ports {axi_c2c_selio_tx_data_out_0[21]}]
+#set_property PACKAGE_PIN BA14 [get_ports {axi_c2c_selio_tx_data_out_0[15]}]
+#set_property PACKAGE_PIN BB12 [get_ports {axi_c2c_selio_tx_data_out_0[16]}]
+#set_property PACKAGE_PIN BB13 [get_ports {axi_c2c_selio_tx_data_out_0[17]}]
+#set_property PACKAGE_PIN BA15 [get_ports {axi_c2c_selio_tx_data_out_0[18]}]
+#set_property PACKAGE_PIN BA16 [get_ports {axi_c2c_selio_tx_data_out_0[19]}]
+#set_property PACKAGE_PIN BC13 [get_ports {axi_c2c_selio_tx_data_out_0[20]}]
+#set_property PACKAGE_PIN BC14 [get_ports {axi_c2c_selio_tx_data_out_0[21]}]
 #set_property PACKAGE_PIN AP13 [get_ports {axi_c2c_selio_tx_data_out_0[22]}]
 
 
@@ -2669,11 +2677,11 @@ set_property PACKAGE_PIN AP12 [get_ports {axi_c2c_selio_rx_data_in_0[11]}]
 set_property PACKAGE_PIN AY12 [get_ports {axi_c2c_selio_rx_data_in_0[12]}]
 set_property PACKAGE_PIN AW12 [get_ports {axi_c2c_selio_rx_data_in_0[13]}]
 set_property PACKAGE_PIN AY10 [get_ports {axi_c2c_selio_rx_data_in_0[14]}]
-set_property PACKAGE_PIN AW11 [get_ports {axi_c2c_selio_rx_data_in_0[15]}]
-set_property PACKAGE_PIN AV11 [get_ports {axi_c2c_selio_rx_data_in_0[16]}]
-set_property PACKAGE_PIN AU11 [get_ports {axi_c2c_selio_rx_data_in_0[17]}]
-set_property PACKAGE_PIN AY13 [get_ports {axi_c2c_selio_rx_data_in_0[18]}]
-set_property PACKAGE_PIN AW13 [get_ports {axi_c2c_selio_rx_data_in_0[19]}]
-set_property PACKAGE_PIN AP16 [get_ports {axi_c2c_selio_rx_data_in_0[20]}]
-set_property PACKAGE_PIN AN16 [get_ports {axi_c2c_selio_rx_data_in_0[21]}]
+#set_property PACKAGE_PIN AW11 [get_ports {axi_c2c_selio_rx_data_in_0[15]}]
+#set_property PACKAGE_PIN AV11 [get_ports {axi_c2c_selio_rx_data_in_0[16]}]
+#set_property PACKAGE_PIN AU11 [get_ports {axi_c2c_selio_rx_data_in_0[17]}]
+#set_property PACKAGE_PIN AY13 [get_ports {axi_c2c_selio_rx_data_in_0[18]}]
+#set_property PACKAGE_PIN AW13 [get_ports {axi_c2c_selio_rx_data_in_0[19]}]
+#set_property PACKAGE_PIN AP16 [get_ports {axi_c2c_selio_rx_data_in_0[20]}]
+#set_property PACKAGE_PIN AN16 [get_ports {axi_c2c_selio_rx_data_in_0[21]}]
 #set_property PACKAGE_PIN AR13 [get_ports {axi_c2c_selio_rx_data_in_0[22]}]
