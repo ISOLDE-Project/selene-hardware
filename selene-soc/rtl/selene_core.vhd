@@ -254,6 +254,12 @@ architecture rtl of selene_core is
   signal mem_sniff_coreID_read_serving_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
   signal mem_sniff_coreID_write_pending_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
   signal mem_sniff_coreID_write_serving_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
+  
+  --dummy signals
+  signal dummy_m_awregion : std_logic_vector(3 downto 0);
+  signal dummy_m_arregion : std_logic_vector(3 downto 0);
+  signal dummy_s_awregion : std_logic_vector(3 downto 0);
+  signal dummy_s_arregion : std_logic_vector(3 downto 0);
 
     
     --| XXXX XXXX    XXXX XX      X        X         X
@@ -599,90 +605,119 @@ end generate;
         axi_to_initiator    => xbar_l_aximi
     );  
 
-    c2c : entity xil_defaultlib.c2c_master_ip_wrapper
-      port map (
-        -- Clock & Reset
-        c2c_clk => clkm,
-        c2c_rst => rstn,
-        -- Physical C2C IO
-        axi_c2c_selio_rx_data_in_0        => axi_c2c_selio_rx_data_in_0,
-        axi_c2c_selio_rx_diff_clk_in_p_0  => axi_c2c_selio_rx_diff_clk_in_p_0,
-        axi_c2c_selio_rx_diff_clk_in_n_0  => axi_c2c_selio_rx_diff_clk_in_n_0,
-        axi_c2c_selio_tx_data_out_0       => axi_c2c_selio_tx_data_out_0,
-        axi_c2c_selio_tx_diff_clk_out_p_0 => axi_c2c_selio_tx_diff_clk_out_p_0,
-        axi_c2c_selio_tx_diff_clk_out_n_0 => axi_c2c_selio_tx_diff_clk_out_n_0,
-        -- ============================
-        -- SLAVE AXI (SELENE → remote)
-        -- ============================
-        -- Write Address Channel (AW)
-        s_axi_awaddr  => target_aximo(CFG_AXI_N_TARGETS-1).aw.addr,
-        s_axi_awburst => target_aximo(CFG_AXI_N_TARGETS-1).aw.burst,
-        s_axi_awlen   => target_aximo(CFG_AXI_N_TARGETS-1).aw.len,
-        s_axi_awsize  => target_aximo(CFG_AXI_N_TARGETS-1).aw.size,
-        s_axi_awvalid => target_aximo(CFG_AXI_N_TARGETS-1).aw.valid,
-        s_axi_awready => target_aximi(CFG_AXI_N_TARGETS-1).aw.ready,
-        -- Write Data Channel (W)
-        s_axi_wdata   => target_aximo(CFG_AXI_N_TARGETS-1).w.data,
-        s_axi_wstrb   => target_aximo(CFG_AXI_N_TARGETS-1).w.strb,
-        s_axi_wlast   => target_aximo(CFG_AXI_N_TARGETS-1).w.last,
-        s_axi_wvalid  => target_aximo(CFG_AXI_N_TARGETS-1).w.valid,
-        s_axi_wready  => target_aximi(CFG_AXI_N_TARGETS-1).w.ready,
-        -- Write Response Channel (B)
-        s_axi_bresp   => target_aximi(CFG_AXI_N_TARGETS-1).b.resp,
-        s_axi_bvalid  => target_aximi(CFG_AXI_N_TARGETS-1).b.valid,
-        s_axi_bready  => target_aximo(CFG_AXI_N_TARGETS-1).b.ready,
-        -- Read Address Channel (AR)
-        s_axi_araddr  => target_aximo(CFG_AXI_N_TARGETS-1).ar.addr,
-        s_axi_arburst => target_aximo(CFG_AXI_N_TARGETS-1).ar.burst,
-        s_axi_arlen   => target_aximo(CFG_AXI_N_TARGETS-1).ar.len,
-        s_axi_arsize  => target_aximo(CFG_AXI_N_TARGETS-1).ar.size,
-        s_axi_arvalid => target_aximo(CFG_AXI_N_TARGETS-1).ar.valid,
-        s_axi_arready => target_aximi(CFG_AXI_N_TARGETS-1).ar.ready,
-        -- Read Data Channel (R)
-        s_axi_rdata   => target_aximi(CFG_AXI_N_TARGETS-1).r.data,
-        s_axi_rresp   => target_aximi(CFG_AXI_N_TARGETS-1).r.resp,
-        s_axi_rlast   => target_aximi(CFG_AXI_N_TARGETS-1).r.last,
-        s_axi_rvalid  => target_aximi(CFG_AXI_N_TARGETS-1).r.valid,
-        s_axi_rready  => target_aximo(CFG_AXI_N_TARGETS-1).r.ready,
-        -- =============================
-        -- MASTER AXI (remote → SELENE)
-        -- =============================
-        -- Write Address Channel (AW)
-        M_AXI_awaddr  => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.addr,
-        M_AXI_awburst => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.burst,
-        M_AXI_awlen   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.len,
-        M_AXI_awsize  => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.size,
-        M_AXI_awvalid => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.valid,
-        M_AXI_awready => initiator_aximi(CFG_AXI_N_INITIATORS-1).aw.ready,
-        -- Write Data Channel (W)
-        M_AXI_wdata   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.data,
-        M_AXI_wstrb   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.strb,
-        M_AXI_wlast   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.last,
-        M_AXI_wvalid  => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.valid,
-        M_AXI_wready  => initiator_aximi(CFG_AXI_N_INITIATORS-1).w.ready,
-        -- Write Response Channel (B)
-        M_AXI_bresp   => initiator_aximi(CFG_AXI_N_INITIATORS-1).b.resp,
-        M_AXI_bvalid  => initiator_aximi(CFG_AXI_N_INITIATORS-1).b.valid,
-        M_AXI_bready  => initiator_aximo(CFG_AXI_N_INITIATORS-1).b.ready,
-        -- Read Address Channel (AR)
-        M_AXI_araddr  => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.addr,
-        M_AXI_arburst => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.burst,
-        M_AXI_arlen   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.len,
-        M_AXI_arsize  => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.size,
-        M_AXI_arvalid => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.valid,
-        M_AXI_arready => initiator_aximi(CFG_AXI_N_INITIATORS-1).ar.ready,
-        -- Read Data Channel (R)
-        M_AXI_rdata   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.data,
-        M_AXI_rresp   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.resp,
-        M_AXI_rlast   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.last,
-        M_AXI_rvalid  => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.valid,
-        M_AXI_rready  => initiator_aximo(CFG_AXI_N_INITIATORS-1).r.ready,
-        -- LEDs optional
-        GPIO_LED_0 => open,
-        GPIO_LED_1 => open,
-        GPIO_LED_2 => open
-      );
-
+  c2c : entity xil_defaultlib.c2c_master_ip_wrapper_0
+    port map (    
+      ------------------------------------------------------------------
+      -- Clock & Reset
+      ------------------------------------------------------------------
+      c2c_clk => clkm,
+      c2c_rst => rstn,  -- ACTIVE_LOW (correct)
+      ------------------------------------------------------------------
+      -- Physical Chip2Chip IO
+      ------------------------------------------------------------------
+      axi_c2c_selio_rx_data_in_0        => axi_c2c_selio_rx_data_in_0,
+      axi_c2c_selio_rx_diff_clk_in_p_0  => axi_c2c_selio_rx_diff_clk_in_p_0,
+      axi_c2c_selio_rx_diff_clk_in_n_0  => axi_c2c_selio_rx_diff_clk_in_n_0,
+      axi_c2c_selio_tx_data_out_0       => axi_c2c_selio_tx_data_out_0,
+      axi_c2c_selio_tx_diff_clk_out_p_0 => axi_c2c_selio_tx_diff_clk_out_p_0,
+      axi_c2c_selio_tx_diff_clk_out_n_0 => axi_c2c_selio_tx_diff_clk_out_n_0,
+      ------------------------------------------------------------------
+      -- SLAVE AXI (SELENE → Remote FPGA)
+      ------------------------------------------------------------------
+      -- AW
+      s_axi_awaddr  => target_aximo(CFG_AXI_N_TARGETS-1).aw.addr,
+      s_axi_awburst => target_aximo(CFG_AXI_N_TARGETS-1).aw.burst,
+      s_axi_awlen   => target_aximo(CFG_AXI_N_TARGETS-1).aw.len,
+      s_axi_awsize  => target_aximo(CFG_AXI_N_TARGETS-1).aw.size,
+      s_axi_awvalid => target_aximo(CFG_AXI_N_TARGETS-1).aw.valid,
+      s_axi_awready => target_aximi(CFG_AXI_N_TARGETS-1).aw.ready,
+      -- REQUIRED EXTRA SIGNALS
+      s_axi_awcache   => target_aximo(CFG_AXI_N_TARGETS-1).aw.cache,
+      s_axi_awlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).aw.lock,
+      s_axi_awprot    => target_aximo(CFG_AXI_N_TARGETS-1).aw.prot,
+      s_axi_awqos     => target_aximo(CFG_AXI_N_TARGETS-1).aw.qos,
+      s_axi_awregion  => dummy_s_awregion,
+      -- W
+      s_axi_wdata   => target_aximo(CFG_AXI_N_TARGETS-1).w.data,
+      s_axi_wstrb   => target_aximo(CFG_AXI_N_TARGETS-1).w.strb,
+      s_axi_wlast   => target_aximo(CFG_AXI_N_TARGETS-1).w.last,
+      s_axi_wvalid  => target_aximo(CFG_AXI_N_TARGETS-1).w.valid,
+      s_axi_wready  => target_aximi(CFG_AXI_N_TARGETS-1).w.ready,
+      -- B
+      s_axi_bresp   => target_aximi(CFG_AXI_N_TARGETS-1).b.resp,
+      s_axi_bvalid  => target_aximi(CFG_AXI_N_TARGETS-1).b.valid,
+      s_axi_bready  => target_aximo(CFG_AXI_N_TARGETS-1).b.ready,
+      -- AR
+      s_axi_araddr  => target_aximo(CFG_AXI_N_TARGETS-1).ar.addr,
+      s_axi_arburst => target_aximo(CFG_AXI_N_TARGETS-1).ar.burst,
+      s_axi_arlen   => target_aximo(CFG_AXI_N_TARGETS-1).ar.len,
+      s_axi_arsize  => target_aximo(CFG_AXI_N_TARGETS-1).ar.size,
+      s_axi_arvalid => target_aximo(CFG_AXI_N_TARGETS-1).ar.valid,
+      s_axi_arready => target_aximi(CFG_AXI_N_TARGETS-1).ar.ready,
+      -- REQUIRED EXTRA SIGNALS
+      s_axi_arcache   => target_aximo(CFG_AXI_N_TARGETS-1).ar.cache,
+      s_axi_arlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).ar.lock,
+      s_axi_arprot    => target_aximo(CFG_AXI_N_TARGETS-1).ar.prot,
+      s_axi_arqos     => target_aximo(CFG_AXI_N_TARGETS-1).ar.qos,
+      s_axi_arregion  => dummy_s_arregion,
+      -- R
+      s_axi_rdata   => target_aximi(CFG_AXI_N_TARGETS-1).r.data,
+      s_axi_rresp   => target_aximi(CFG_AXI_N_TARGETS-1).r.resp,
+      s_axi_rlast   => target_aximi(CFG_AXI_N_TARGETS-1).r.last,
+      s_axi_rvalid  => target_aximi(CFG_AXI_N_TARGETS-1).r.valid,
+      s_axi_rready  => target_aximo(CFG_AXI_N_TARGETS-1).r.ready,
+      ------------------------------------------------------------------
+      -- MASTER AXI (Remote FPGA → SELENE)
+      ------------------------------------------------------------------
+      -- AW
+      M_AXI_awaddr   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.addr,
+      M_AXI_awburst  => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.burst,
+      M_AXI_awlen    => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.len,
+      M_AXI_awsize   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.size,
+      M_AXI_awvalid  => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.valid,
+      M_AXI_awready  => initiator_aximi(CFG_AXI_N_INITIATORS-1).aw.ready,
+      -- REQUIRED EXTRA SIGNALS
+      M_AXI_awcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.cache,
+      M_AXI_awprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.prot,
+      M_AXI_awlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.lock,
+      M_AXI_awqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.qos,
+      M_AXI_awregion  => dummy_m_awregion,
+      -- W
+      M_AXI_wdata   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.data,
+      M_AXI_wstrb   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.strb,
+      M_AXI_wlast   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.last,
+      M_AXI_wvalid  => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.valid,
+      M_AXI_wready  => initiator_aximi(CFG_AXI_N_INITIATORS-1).w.ready,
+      -- B
+      M_AXI_bresp   => initiator_aximi(CFG_AXI_N_INITIATORS-1).b.resp,
+      M_AXI_bvalid  => initiator_aximi(CFG_AXI_N_INITIATORS-1).b.valid,
+      M_AXI_bready  => initiator_aximo(CFG_AXI_N_INITIATORS-1).b.ready,
+      -- AR
+      M_AXI_araddr   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.addr,
+      M_AXI_arburst  => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.burst,
+      M_AXI_arlen    => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.len,
+      M_AXI_arsize   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.size,
+      M_AXI_arvalid  => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.valid,
+      M_AXI_arready  => initiator_aximi(CFG_AXI_N_INITIATORS-1).ar.ready,
+      -- REQUIRED EXTRA SIGNALS
+      M_AXI_arcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.cache,
+      M_AXI_arprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.prot,
+      M_AXI_arlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.lock,
+      M_AXI_arqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.qos,
+      M_AXI_arregion  => dummy_m_arregion,   
+      -- R
+      M_AXI_rdata   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.data,
+      M_AXI_rresp   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.resp,
+      M_AXI_rlast   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.last,
+      M_AXI_rvalid  => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.valid,
+      M_AXI_rready  => initiator_aximo(CFG_AXI_N_INITIATORS-1).r.ready,
+      ------------------------------------------------------------------
+      -- LEDs
+      ------------------------------------------------------------------
+      GPIO_LED_0 => open,
+      GPIO_LED_1 => open,
+      GPIO_LED_2 => open
+    );
 
     --Rtl accelerator created by vivado HLS
     -- axi_acc_instance0 : vcopy_kernel 
