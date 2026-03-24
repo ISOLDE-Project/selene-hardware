@@ -10,9 +10,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "RootVoter.h"
+#include <bcc/bcc.h>
 
 #define DSIZE 10
 volatile uint64_t data[DSIZE];
+/* some stack for your processors */
+uint64_t thestack[4][4096 / 8];
 
 
 int main()

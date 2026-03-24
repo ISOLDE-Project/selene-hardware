@@ -141,6 +141,7 @@ architecture rtl of selene_core is
   component FFICTR is
   port (
     clk_in : in STD_LOGIC;
+    dcm_locked_0 : in STD_LOGIC;
     reset : in STD_LOGIC;
     CLK_O_0 : out STD_LOGIC;
     RST_O_0 : out STD_LOGIC;
@@ -246,7 +247,7 @@ architecture rtl of selene_core is
 
     signal ffi_clk : STD_LOGIC;
     signal ffi_rst : STD_LOGIC;
-    signal ffi_gpio_in : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal ffi_gpio_in : STD_LOGIC_VECTOR ( 63 downto 0 );
     signal rstboardn      : std_ulogic;
 
   --mem_monitor wires from mem_sys to gpp--
@@ -377,7 +378,7 @@ begin
   
   
   def_clk_gen : if (CFG_MIG_7SERIES = 1) generate
-    clkm    <= mig_clkout;
+    clkm    <= ffi_clk when USE_FFI_CLOCK = 1 else mig_clkout;
     gen_clk <= mig_clkout;
   end generate;
   
@@ -406,10 +407,11 @@ FFI_GEN: if (FAULT_INJECTOR_ENABLE = 1) generate
     FFICORE: component FFICTR
          port map (
             clk_in => gen_clk,
+			dcm_locked_0 => clk_lock,
             reset => rst,
             CLK_O_0 => ffi_clk,
             RST_O_0 => ffi_rst,
-            GPIO_EXT(31 downto 0) => ffi_gpio_in
+            GPIO_EXT(31 downto 0) => ffi_gpio_in(31 downto 0)
         );
         
 end generate;
@@ -484,10 +486,10 @@ end generate;
     -- Clock and Reset
       clkinp       => clkinp,
       clkinn       => clkinn,
-      rstn         => rstn,
+      rstn         => rstboardn,
       rstraw       => rstraw,
       mig_clkout   => mig_clkout,
-      clkin        => clkm,
+      clkin        => gen_clk,
       ahbsi        => mem_ahbsi,
       ahbso        => mem_ahbso,
       apbo         => mem_apbo,
@@ -648,7 +650,8 @@ end generate;
           rst_n     => rstn, 
           axi_in    => accel_l_aximo(1), 
           axi_out   => accel_l_aximi(1), 
-          interrupt => rv_interrupt(0) -- not used yet
+          interrupt => rv_interrupt(0), -- not used yet
+		  reg_probe_out => ffi_gpio_in
         );  
     end generate;
 

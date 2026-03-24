@@ -9,6 +9,8 @@ package librv is
    
   constant C_S_AXI_ADDR_WIDTH  : integer := 12;
   constant C_S_AXI_DATA_WIDTH  : integer := 128;
+  constant REG_DATA_WIDTH   : integer := 64;
+  
   
   
   type axi_rv_slv_out is record --AXI-lite slave interface
@@ -47,7 +49,8 @@ package librv is
       rst_n:            in std_logic;
       axi_in:           in axi_mosi_type;
       axi_out:          out axi_somi_type;
-      interrupt:        out std_logic
+      interrupt:        out std_logic;
+      reg_probe_out: out std_logic_vector(REG_DATA_WIDTH-1 downto 0)
     );  
   end component;
 
@@ -84,7 +87,8 @@ package librv is
       S_AXI_BVALID_o: out std_logic;
       S_AXI_BREADY_i: in std_logic;
       S_AXI_BRESP_o: out std_logic_vector(1 downto 0);
-      INTERRUPT: out std_logic
+      INTERRUPT: out std_logic;
+      REG_PROBE_OUT: out std_logic_vector(REG_DATA_WIDTH-1 downto 0)
     );
     end component;
     

@@ -132,7 +132,7 @@ package config is
   constant CFG_L2_EDAC : integer := 0;
   constant CFG_L2_AXI : integer := 1;
   -- L2 Cache Lite
-  constant CFG_L2CL_EN : integer := 1;
+  constant CFG_L2CL_EN : integer := 0;
   constant CFG_L2CL_SIZE : integer := 128;
   constant CFG_L2CL_WAYS : integer := 4;
   constant CFG_L2CL_REPL : integer := 0;
@@ -152,7 +152,7 @@ package config is
 -- DSU UART
   constant CFG_AHB_UART : integer := 1;
 -- JTAG based DSU interface
-  constant CFG_AHB_JTAG : integer := 1;
+  constant CFG_AHB_JTAG : integer := 0;
 -- USB DSU
   constant CFG_GRUSB_DCL : integer := 0;
   constant CFG_GRUSB_DCL_UIFACE : integer := 1;
@@ -218,11 +218,11 @@ package config is
   constant CFG_ETH_FIFO : integer := 512;
   constant CFG_GRETH_FMC : integer := 0;
 -- UART 1
-  constant CFG_UART1_ENABLE : integer := 1;
-  constant CFG_UART1_FIFO : integer := 32;
--- UART 2
-  constant CFG_UART2_ENABLE : integer := 1;
-  constant CFG_UART2_FIFO : integer := 32;
+  --constant CFG_UART1_ENABLE : integer := 1;
+  --constant CFG_UART1_FIFO : integer := 32;
+-- RS-485 UARTs instantiated in io_sys
+  constant CFG_UART2_ENABLE : integer := 1; 
+  constant CFG_UART2_FIFO : integer := 32; -- set uart fifo =1 for simulation 
 -- LEON3 interrupt controller
   constant CFG_IRQ3_ENABLE : integer := 0;
   constant CFG_IRQ3_NSEC : integer := 0;
@@ -338,33 +338,32 @@ package config is
 
 -- RootVoter Cells  
   constant CFG_RVC_VERSION     : integer := 2;
-  
   constant RVC_0_ENABLE        : integer := 1;
   constant RVC_0_MAX_DATASETS  : integer := 9;
   constant RVC_0_COUNT_MATCHES : integer := 1;
   constant RVC_0_LIST_MATCHES  : integer := 0;
   constant RVC_0_LIST_FAILURES : integer := 1;  
-
   constant RVC_1_ENABLE        : integer := 1;
   constant RVC_1_MAX_DATASETS  : integer := 9;
   constant RVC_1_COUNT_MATCHES : integer := 1;
   constant RVC_1_LIST_MATCHES  : integer := 0;
   constant RVC_1_LIST_FAILURES : integer := 1;  
-
   constant RVC_2_ENABLE        : integer := 1;
   constant RVC_2_MAX_DATASETS  : integer := 9;
   constant RVC_2_COUNT_MATCHES : integer := 1;
   constant RVC_2_LIST_MATCHES  : integer := 0;
   constant RVC_2_LIST_FAILURES : integer := 1;  
-
   constant RVC_3_ENABLE        : integer := 1;
   constant RVC_3_MAX_DATASETS  : integer := 9;
   constant RVC_3_COUNT_MATCHES : integer := 1;
   constant RVC_3_LIST_MATCHES  : integer := 0;
   constant RVC_3_LIST_FAILURES : integer := 1;  
   
-  constant FAULT_INJECTOR_ENABLE : integer := 0;
-  constant USE_FFI_CLOCK : integer := 0;
+  -- Fault injector core (BAFFI)
+  constant FAULT_INJECTOR_ENABLE : integer := 0; -- when FFI core is enabled, set CFG_AHB_JTAG=0
+  constant USE_FFI_CLOCK : integer := 0;         -- BAFFI-controlled clock is required for emulation of transient faults
   
+  --AHB Filter
+  constant AHB_FILTER_ENABLE : integer := 1;
   
 end;

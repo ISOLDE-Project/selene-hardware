@@ -298,8 +298,9 @@ void print_vote_result(VoteResult* v);
 //Clears RV cell registers
 int RVC_clear(RootVoterDescriptor* RVC);
 
-void ListRegisters(RootVoterDescriptor* RVC);
+uint32_t crc32_digest(uint8_t * bytestream, uint32_t length);
 
+uint64_t crc64_digest(uint8_t * bytestream, uint32_t length);
 
 #endif
 

@@ -160,19 +160,6 @@ VoteResult RVC_vote(RootVoterDescriptor* RVC){
 
 
 
-
-void ListRegisters(RootVoterDescriptor* RVC){
-    volatile uint64_t* voter_base = RVC->base_adr;
-    volatile uint64_t regval = 0;
-    for(int i=0;i<5;i++){
-        regval = *(voter_base + i);
-        printf("RVC reg[%2d]=%08x\n", i, regval);
-    }
-}
-
-
-
-
 void print_vote_result(VoteResult* v){
     uint8_t N =  v->mode    &0xF;
     uint8_t M = (v->mode>>4)&0xF;    
@@ -190,3 +177,37 @@ void print_vote_result(VoteResult* v){
 
 
 
+uint32_t crc32_digest(uint8_t * bytestream, uint32_t length){
+    const uint32_t polynomial = 0x04C11DB7;
+    uint32_t crc = 0x0;
+    for(uint32_t i; i<length; i++){
+        crc ^=  ((uint32_t)bytestream[i]) << 24; 
+        for (uint8_t k = 0; k < 8; k++){
+            if ((crc & 0x80000000) != 0){
+                crc = (uint32_t)((crc << 1) ^ polynomial);
+            }
+            else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
+}
+
+
+uint64_t crc64_digest(uint8_t * bytestream, uint32_t length){
+    const uint64_t polynomial = 0xD800000000000000;
+    uint64_t crc = 0x0;
+    for(uint32_t i; i<length; i++){
+        crc ^= ((uint64_t)bytestream[i]) << 56; 
+        for (uint8_t k = 0; k < 8; k++){
+            if ((crc & 0x8000000000000000) != 0){
+                crc = (uint64_t)((crc << 1) ^ polynomial);
+            }
+            else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
+}

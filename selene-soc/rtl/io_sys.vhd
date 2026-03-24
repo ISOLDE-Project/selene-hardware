@@ -374,7 +374,14 @@ begin
       generic map (defmast => CFG_DEFMST, split => CFG_SPLIT,
                    rrobin  => CFG_RROBIN, ioaddr => 0,iomask => 0,cfgaddr => 0, cfgmask => 0, fpnpen => 0,
                    ioen    => 0, nahbm => IO_NAHBM, nahbs => 1)
-      port map (rstn, clkm, io_ahbmi, io_ahbmo, io_ahbsi, io_ahbso);
+      port map (
+		  rst => rstn, 
+		  clk => clkm, 
+		  msti => io_ahbmi, 
+		  msto => io_ahbmo, 
+		  mst_valid => (others => '1'),
+		  slvi => io_ahbsi, 
+		  slvo => io_ahbso);
 
     -----------------------------------------------------------------------
     ---  AT AHB MST -------------------------------------------------------
@@ -915,7 +922,7 @@ begin
                                            pirq     => pidx_apbuart485_0,
                                            parity   => 1,
                                            flow     => 0,
-                                           fifosize => 1, --uart485_fifo_sizes(0),
+                                           fifosize => CFG_UART2_FIFO, --uart485_fifo_sizes(0),
                                            abits    => 8,
                                            sbits    => 12)
                               port map (rst   => rstn,
@@ -932,7 +939,7 @@ begin
                                            pirq     => (pidx_apbuart485_0 + 1),
                                            parity   => 1,
                                            flow     => 0,
-                                           fifosize => 1, --uart485_fifo_sizes(1),
+                                           fifosize => CFG_UART2_FIFO, --uart485_fifo_sizes(1),
                                            abits    => 8,
                                            sbits    => 12)
                               port map (rst   => rstn,

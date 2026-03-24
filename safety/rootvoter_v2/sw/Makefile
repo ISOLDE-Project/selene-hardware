@@ -16,6 +16,11 @@ multicore:
 	tclsh ../../../grlib/bin/padsrec.tcl <tmp_$@.srec >hello_multicore.srec
 	rm tmp_$@.srec	
 	
+main:
+	$(CC) $(CFLAGS) RootVoter.c test_main.c -o obj_$@.out
+	riscv-gaisler-elf-objcopy -O srec obj_$@.out tmp_$@.srec	
+	tclsh ../../../grlib/bin/padsrec.tcl <tmp_$@.srec >hello_main.srec
+	rm tmp_$@.srec	
 	
 all: singlecore multicore
 	

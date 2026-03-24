@@ -37,6 +37,9 @@ use gaisler.uart.all;
 use gaisler.misc.all;
 use gaisler.noelv.all;
 use gaisler.plic.all;
+library safety; 
+use safety.libwg.all;
+use work.config.all;
 
 entity noelvsys is
   generic (
@@ -163,11 +166,15 @@ architecture hier of noelvsys is
   -- APB slave index
   constant GPTIME_PINDEX  : integer := nextapb+0;
   constant APBUART_PINDEX : integer := nextapb+1;
+  constant APBWGFTR_PINDEX : integer := nextapb+2;
   -- APB slave address
   constant GPTIME_PADDR   : integer := 16#000#;
   constant GPTIME_PMASK   : integer := 16#FFF#;
   constant APBUART_PADDR  : integer := 16#010#;
   constant APBUART_PMASK  : integer := 16#FFF#;
+  constant APBWGFTR_PADDR  : integer := 16#030#;
+  constant APBWGFTR_PMASK  : integer := 16#FFC#;
+  
   -- Debug bus
   constant DM_DM_HINDEX   : integer := 0+(nodbus*(nextslv+1+2+1));
   constant APBC_DM_HINDEX : integer := 1;
@@ -188,6 +195,8 @@ architecture hier of noelvsys is
   constant APBUART_PIRQ   : integer := 1;
   constant GPTIME_PIRQ    : integer := 2; -- , 3
   --constant GPTIME_PIRQ2   : integer := 3;
+  constant NAHBM : integer := ncpu+nextmst+1+(nodbus*(ndbgmst-1));
+  signal mst_valid   :  std_logic_vector(NAHBMST-1 downto 0);
 
 begin
 
@@ -200,7 +209,7 @@ begin
       ioaddr   => AHBC_IOADDR,
       rrobin   => 1,
       split    => 1,
-      nahbm    => ncpu+nextmst+1+(nodbus*(ndbgmst-1)),
+      nahbm    => NAHBM,
       nahbs    => nextslv+1+2+1+(nodbus*4),
       fpnpen   => 1,
       shadow   => 1,
@@ -213,6 +222,7 @@ begin
       clk  => clk,
       msti => cpumi,
       msto => cpumo,
+	  mst_valid => mst_valid,
       slvi => cpusi,
       slvo => cpuso,
       testen  => testen,
@@ -268,7 +278,7 @@ begin
         hindex1 => APBC_DM_HINDEX,
         haddr1  => APBC_HADDR,
         hmask1  => APBC_HMASK,
-        nslaves => nextapb+2
+        nslaves => nextapb+3
         )
       port map (
         rst  => rstn,
@@ -287,7 +297,7 @@ begin
         hindex => nextslv,
         haddr  => APBC_HADDR,
         hmask  => APBC_HMASK,
-        nslaves => nextapb+2
+        nslaves => nextapb+3
         )
       port map (
         rst  => rstn,
@@ -303,7 +313,7 @@ begin
 
   apbi(0 to nextapb-1) <= cpuapbi(0 to nextapb-1);
   cpuapbo(0 to nextapb-1) <= apbo(0 to nextapb-1);
-  cpuapbo(nextapb+2 to cpuapbo'high) <= (others => apb_none);
+  cpuapbo(nextapb+3 to cpuapbo'high) <= (others => apb_none);
 
   ----------------------------------------------------------------------------
   -- Processor(s)
@@ -451,6 +461,7 @@ begin
         clk  => clk,
         msti => dbgahbmi,
         msto => dbgahbmo,
+		mst_valid => mst_valid,
         slvi => dbgsi,
         slvo => dbgso,
         testen  => testen,
@@ -655,5 +666,26 @@ begin
       irqo              => eip
       );
 
+  AHB_FILTER_GEN: if (AHB_FILTER_ENABLE /= 0) generate
+    ahbfilter: WG_AHB_FILTER
+      generic map(
+        pindex   => APBWGFTR_PINDEX,
+        paddr    => APBWGFTR_PADDR,
+        pmask    => APBWGFTR_PMASK,
+        pirq     => 3,
+    	  abits    => 10,
+  	  nahbm    => NAHBM)
+      port map(
+        rst    => rstn,
+        clk    => clk,
+        apbi   => cpuapbi(APBWGFTR_PINDEX),
+        apbo   => cpuapbo(APBWGFTR_PINDEX),
+        msto   => cpumo,
+        mst_valid => mst_valid
+       );
+  end generate;
+  NO_AHB_FILTER_GEN: if (AHB_FILTER_ENABLE = 0) generate
+      mst_valid <= (others => '1');
+  end generate;
 
 end;

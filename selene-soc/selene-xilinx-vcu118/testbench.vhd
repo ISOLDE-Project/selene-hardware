@@ -210,7 +210,7 @@ architecture behav of testbench is
   signal io_atm_ctrl   : ahbtb_ctrl_type;
   signal atm_ctrl      : ahbtb_ctrl_type;
 
-
+    signal kernel_token, kernel_1_hashsum, kernel_2_hashsum, dataset_1, dataset_2, rvc_status : std_logic_vector(31 downto 0);
 
 begin
 
@@ -295,26 +295,26 @@ begin
       uart485_rstx      => uart485_rstx,
       uart485_rsrx      => uart485_rsrx,
       -- DDR4
-      ddr4_dq           => ddr4_dq,
-      ddr4_dqs_c        => ddr4_dqs_c,
-      ddr4_dqs_t        => ddr4_dqs_t,
-      ddr4_addr         => ddr4_addr,
-      ddr4_ras_n        => ddr4_ras_n,
-      ddr4_cas_n        => ddr4_cas_n,
-      ddr4_we_n         => ddr4_we_n,
-      ddr4_ba           => ddr4_ba,
-      ddr4_bg           => ddr4_bg,
-      ddr4_dm_n         => ddr4_dm_n,
-      ddr4_ck_c         => ddr4_ck_c,
-      ddr4_ck_t         => ddr4_ck_t,
-      ddr4_cke          => ddr4_cke,
-      ddr4_act_n        => ddr4_act_n,
-      --ddr4_alert_n      => ddr4_alert_n,
-      ddr4_odt          => ddr4_odt,
-      ddr4_par          => ddr4_par,
-      ddr4_ten          => ddr4_ten, 
-      ddr4_cs_n         => ddr4_cs_n, 
-      ddr4_reset_n      => ddr4_reset_n,
+      -- ddr4_dq           => ddr4_dq,
+      -- ddr4_dqs_c        => ddr4_dqs_c,
+      -- ddr4_dqs_t        => ddr4_dqs_t,
+      -- ddr4_addr         => ddr4_addr,
+      -- ddr4_ras_n        => ddr4_ras_n,
+      -- ddr4_cas_n        => ddr4_cas_n,
+      -- ddr4_we_n         => ddr4_we_n,
+      -- ddr4_ba           => ddr4_ba,
+      -- ddr4_bg           => ddr4_bg,
+      -- ddr4_dm_n         => ddr4_dm_n,
+      -- ddr4_ck_c         => ddr4_ck_c,
+      -- ddr4_ck_t         => ddr4_ck_t,
+      -- ddr4_cke          => ddr4_cke,
+      -- ddr4_act_n        => ddr4_act_n,
+      -- --ddr4_alert_n      => ddr4_alert_n,
+      -- ddr4_odt          => ddr4_odt,
+      -- ddr4_par          => ddr4_par,
+      -- ddr4_ten          => ddr4_ten, 
+      -- ddr4_cs_n         => ddr4_cs_n, 
+      -- ddr4_reset_n      => ddr4_reset_n,
       io_atmi           => io_atm_ctrl.i,
       io_atmo           => io_atm_ctrl.o,
       atmi              => atm_ctrl.i,
@@ -1093,6 +1093,32 @@ begin
       print("Hart 0 halted after successfull RAM test binary execution.");
     end;
 
+    procedure CheckFailureMode(
+        rvc_status : std_logic_vector(31 downto 0);
+        dataset_0, dataset_1 : std_logic_vector(31 downto 0);
+        res_0, res_1 : std_logic_vector(31 downto 0)) is
+        variable timeout : std_logic_vector(3 downto 0) := rvc_status(11 downto 8);
+        variable failure : std_logic_vector(3 downto 0) := rvc_status(27 downto 24);
+        --variable buf : string(1 to 256);
+        variable ref : std_logic_vector(31 downto 0) := x"1F20398A";
+    begin
+        --buf := "Timeout_stat=" & tost(timeout) & " : failure_stat=" & tost(failure) & " : res_0=" & tost(res_0) & " : res_1=" & tost(res_1) & " : rvc_state=" & tost(rvc_status(0 downto 0)) & " : dataset_0=" & tost(dataset_0) & " : dataset_1=" & tost(dataset_1); 
+        if timeout /= "0000" then
+            print("Status: {Timeout} : ");
+        elsif (res_0 /= ref) or (res_1 /= ref) then
+            if failure /= "0000" then
+                print("Status: {Signalled} : ");
+            else 
+                print("Status: {SDC} : ");
+            end if;
+        else 
+            print("Status: {Masked} : ");
+        end if;
+        print("Timeout_stat=" & tost(timeout) & " : failure_stat=" & tost(failure) & " : res_0=" & tost(res_0) & " : res_1=" & tost(res_1) & " : rvc_state=" & tost(rvc_status(0 downto 0)) & " : dataset_0=" & tost(dataset_0) & " : dataset_1=" & tost(dataset_1));
+    end;
+        
+
+
     procedure riscvtb(signal dsurx : in std_ulogic; signal dsutx : out std_ulogic) is
       variable w32        : std_logic_vector(31 downto 0);
 
@@ -1114,6 +1140,9 @@ begin
 
     begin
 
+
+
+
       report("-- Check AHBROM");
       txc(dsutx, 16#80#, txp);
       txa(dsutx, 16#C0#, 16#00#, 16#40#, 16#00#, txp);
@@ -1125,6 +1154,7 @@ begin
       txa(dsutx, 16#FC#, 16#00#, 16#10#, 16#08#, txp);
       txa(dsutx, 16#80#, 16#00#, 16#00#, 16#03#, txp);
 
+	   
       print("-- Activate the Debug Module");
       txc(dsutx, 16#c0#, txp);
       txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
@@ -1234,6 +1264,42 @@ begin
         busy := w32(12);
       end loop;
 
+
+      print("-- Write new pc to hart 1");
+      w32 := (others => '0');
+      w32(0) := '1';
+      w32(17 downto 16) := "01";
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, conv_integer(w32(31 downto 24)), conv_integer(w32(23 downto 16)),
+                 conv_integer(w32(15 downto 8)) , conv_integer(w32(7 downto 0)), txp);
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#10#, txp);
+      txa(dsutx, 16#C0#, 16#00#, 16#40#, 16#00#, txp);
+
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#5C#, txp);
+      txa(dsutx, 16#00#, 16#33#, 16#07#, 16#b1#, txp);
+      
+      txc(dsutx, 16#80#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Abstract Control and Status is " & tost(w32));
+
+      busy := w32(12);
+
+      while busy = '1' loop
+        txc(dsutx, 16#80#, txp);
+        txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#58#, txp);
+        rxi(dsurx, w32, txp, lresp);
+        print("-- Abstract Control and Status is " & tost(w32));
+
+        busy := w32(12);
+      end loop;
+
+
+
+
       print("-- Configure Stack Pointer");
       if (CFG_MIG_7SERIES = 1) then
       -- MIG 1GB Memory at 0x00000000, stack should be at 0x3FFFFFF0
@@ -1244,33 +1310,39 @@ begin
       end if;
       reg := (12 => '1', others => '0'); reg(4 downto 0) := "00010"; --GPR_SP
       dm_reg_write(dsurx, dsutx, reg, w32);
-
-      wait for 100 ns;
-      print("-- Trying to access address 0xFC0E0004");
-      txc(dsutx, 16#80#, txp); --read command
-      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#04#, txp); --address to read
-      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
-                                   -- variable w32
-      print("-- READ from 0xFC0E0004: " & tost(w32));
+      -- Select hart0 and write the stack pointer
+      txc(dsutx, 16#c0#, txp);
+      txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
+      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp);
+      dm_reg_write(dsurx, dsutx, reg, w32); 
       
-      print("-- Trying to access address 0xFC0E0008");
-      txc(dsutx, 16#80#, txp); --read command
-      txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#08#, txp); --address to read
-      rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
-                                   -- variable w32
-      print("-- READ from 0xFC0E0008: " & tost(w32));
+      
+    --  wait for 100 ns;
+    --  print("-- Trying to access address 0xFC0E0004");
+    --  txc(dsutx, 16#80#, txp); --read command
+    --  txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#04#, txp); --address to read
+    --  rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+    --                               -- variable w32
+    --  print("-- READ from 0xFC0E0004: " & tost(w32));
+    --  
+    --  print("-- Trying to access address 0xFC0E0008");
+    --  txc(dsutx, 16#80#, txp); --read command
+    --  txa(dsutx, 16#FC#, 16#0E#, 16#00#, 16#08#, txp); --address to read
+    --  rxi(dsurx, w32, txp, lresp); -- wait for respone and save response
+    --                               -- variable w32
+    --  print("-- READ from 0xFC0E0008: " & tost(w32));
 
       wait for 100 ns;
       print("-- Remove halt for hart 0");
       -- Select only hart 0
       txc(dsutx, 16#c0#, txp); --TX command
       txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#54#, txp); --address
-      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp); --data
+      txa(dsutx, 16#00#, 16#00#, 16#00#, 16#0F#, txp); --data
 
       -- Remove halt for hart 0
       txc(dsutx, 16#c0#, txp);
       txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
-      txa(dsutx, 16#40#, 16#00#, 16#00#, 16#01#, txp);
+      txa(dsutx, 16#44#, 16#00#, 16#00#, 16#01#, txp);
 
       txc(dsutx, 16#80#, txp);
       txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
@@ -1289,7 +1361,30 @@ begin
         --resumed := w32(10) and w32(11);
         resumed := w32(10);
       end loop;
-      print("-- hart 0 resume status : " & tost(resumed));
+      
+      print( "-- hart 0 resume status : " & tost(resumed));
+	  
+       -- print("-- Time: " & time'image(now) & " Write Reset command to RVC");
+       -- txc(dsutx, 16#c0#, txp);
+       -- txa(dsutx, 16#FF#, 16#FC#, 16#02#, 16#F8#, txp);
+       -- txa(dsutx, 16#00#, 16#00#, 16#00#, 16#0F#, txp);  
+       -- print("-- Time: " & time'image(now) & " Clear Core-0 result word in RAM");
+       -- txc(dsutx, 16#c0#, txp);
+       -- txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#28#, txp);
+       -- txa(dsutx, 16#00#, 16#00#, 16#00#, 16#00#, txp);  
+       -- print("-- Time: " & time'image(now) & " Clear Core-1 result word in RAM");
+       -- txc(dsutx, 16#c0#, txp);
+       -- txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#2C#, txp);
+       -- txa(dsutx, 16#00#, 16#00#, 16#00#, 16#00#, txp);  
+        print("-- Time: " & time'image(now) & " Write Workload semaphore 0xD0000");
+        txc(dsutx, 16#c0#, txp);
+        txa(dsutx, 16#01#, 16#F0#, 16#00#, 16#00#, txp);
+        txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp);      
+      
+        wait for 5000000 ns;    
+      
+
+      
       while halted = '0' loop
         txc(dsutx, 16#80#, txp);
         txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#44#, txp);
@@ -1297,6 +1392,40 @@ begin
         halted := w32(9);
       end loop;
       print("Hart 0 halted after successfull RAM test binary execution.");
+
+        -- w32 := x"00000000";
+        -- txc(dsutx, 16#80#, txp);
+        -- txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#28#, txp);
+        -- rxi(dsurx, w32, txp, lresp);
+        -- kernel_1_hashsum <= w32;
+        
+        -- w32 := x"00000000";
+        -- txc(dsutx, 16#80#, txp);
+        -- txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#2C#, txp);
+        -- rxi(dsurx, w32, txp, lresp);
+        -- kernel_2_hashsum <= w32;
+        
+        -- w32 := x"00000000";
+        -- txc(dsutx, 16#80#, txp);
+        -- txa(dsutx, 16#FF#, 16#FC#, 16#02#, 16#A0#, txp);
+        -- rxi(dsurx, w32, txp, lresp);
+        -- rvc_status <= w32;        
+        
+        -- w32 := x"00000000";
+        -- txc(dsutx, 16#80#, txp);
+        -- txa(dsutx, 16#FF#, 16#FC#, 16#02#, 16#08#, txp);
+        -- rxi(dsurx, w32, txp, lresp);
+        -- dataset_1 <= w32;     
+        
+        -- w32 := x"00000000";
+        -- txc(dsutx, 16#80#, txp);
+        -- txa(dsutx, 16#FF#, 16#FC#, 16#02#, 16#10#, txp);
+        -- rxi(dsurx, w32, txp, lresp);
+        -- dataset_2 <= w32;       
+        
+        wait for 1000 ns;
+        print("Kernel completed");
+        CheckFailureMode(rvc_status, dataset_1, dataset_2, kernel_1_hashsum, kernel_2_hashsum);
     end;
 
 
@@ -1315,6 +1444,7 @@ begin
     -- Configuration through debug uart
     --iommu_conf(dsutx, dsurx);
 
+    
     -- RISCV Test
     riscvtb(dsutx, dsurx);
     mig_test(dsutx, dsurx);
@@ -1324,11 +1454,18 @@ begin
     --riscvtb(dsutx, dsurx);
     --mig_test(dsutx, dsurx);
 
+
+
     wait for 10 ns;
     assert false
     report "Testbench execution completed successfully!"
     severity failure;
   end process;
+
+
+    process (kernel_1_hashsum, kernel_2_hashsum, dataset_1, dataset_2, rvc_status) begin
+        print("-- Time: " & time'image(now) & ", kernel_1_hashsum: " & tost(kernel_1_hashsum) & ", kernel_2_hashsum: " & tost(kernel_2_hashsum) & ", dataset_1: " & tost(dataset_1) & ", dataset_2: " & tost(dataset_2) & ", rvc_status: " & tost(rvc_status) );
+    end process;
 
 end;
 
