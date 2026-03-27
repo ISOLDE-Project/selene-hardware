@@ -181,6 +181,10 @@ architecture rtl of pads is
 
   signal lclk : std_ulogic;
   signal rst  : std_ulogic;
+  
+  -- C2C link leds
+  signal axi_c2c_link_status_led : std_ulogic;
+  signal axi_c2c_link_error_led  : std_ulogic;
 
   -- APB UART
   signal u1i : uart_in_type;
@@ -287,10 +291,14 @@ begin
     port map (led(4), dsubreak);
   led5_pad : outpad generic map (tech => padtech, level => cmos, voltage => x12v)
     port map (led(5), cpu0errn);
-  led_pads : for i in 6 to 7 generate
-    led_pad : outpad generic map (tech => padtech, level => cmos, voltage => x12v)
-      port map (led(i), gnd);
-  end generate;
+  --led_pads : for i in 6 to 7 generate
+  --  led_pad : outpad generic map (tech => padtech, level => cmos, voltage => x12v)
+  --    port map (led(i), gnd);
+  --end generate;
+  led6_pad : outpad generic map (tech => padtech, level => cmos, voltage => x12v)
+    port map (led(6), axi_c2c_link_error_led);
+  led7_pad : outpad generic map (tech => padtech, level => cmos, voltage => x12v)
+    port map (led(7), axi_c2c_link_status_led);
 
 
   ----------------------------------------------------------------------
@@ -595,6 +603,9 @@ begin
       axi_c2c_selio_tx_data_out_0       => axi_c2c_selio_tx_data_out_0,
       axi_c2c_selio_tx_diff_clk_out_p_0 => axi_c2c_selio_tx_diff_clk_out_p_0,
       axi_c2c_selio_tx_diff_clk_out_n_0 => axi_c2c_selio_tx_diff_clk_out_n_0,
+      -- C2C Link LEDs
+      axi_c2c_link_status => axi_c2c_link_status_led,
+      axi_c2c_link_error  => axi_c2c_link_error_led,
       --AHBJTAG
       tck          => tck,
       tms          => tms,

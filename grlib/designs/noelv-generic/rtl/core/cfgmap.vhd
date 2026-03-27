@@ -31,10 +31,13 @@ package cfgmap is
   constant MEM_HSINDEX      : integer := 0;
   constant ROM_HSINDEX      : integer := 1;
   constant AHBREP_HSINDEX   : integer := 2;
+  constant C2C_HSINDEX      : integer := 3; -- for c2c
   
   -- AHB slave address
   constant L2C_HADDR        : integer := 16#000#;
   constant L2C_HMASK        : integer := 16#800#;
+  constant C2C_HADDR        : integer := 16#A00#; -- for c2c
+  constant C2C_HMASK        : integer := 16#FFF#; -- for c2c
   constant L2C_IOADDR       : integer := 16#FF0#;
   constant MEM_HADDR        : integer := 16#000#;
   constant MEM_HMASK        : integer := 16#800#;

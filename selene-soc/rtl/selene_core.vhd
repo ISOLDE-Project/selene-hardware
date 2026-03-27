@@ -92,6 +92,9 @@ entity selene_core is
     axi_c2c_selio_tx_data_out_0      : out std_logic_vector(14 downto 0);
     axi_c2c_selio_tx_diff_clk_out_p_0: out std_logic;
     axi_c2c_selio_tx_diff_clk_out_n_0: out std_logic;
+    -- C2C Link LEDs
+    axi_c2c_link_status : out std_logic;
+    axi_c2c_link_error  : out std_logic;
     --AHBJTAG
     tck          : in    std_ulogic;
     tms          : in    std_ulogic;
@@ -714,9 +717,9 @@ end generate;
       ------------------------------------------------------------------
       -- LEDs
       ------------------------------------------------------------------
-      GPIO_LED_0 => open,
+      GPIO_LED_0 => axi_c2c_link_status,
       GPIO_LED_1 => open,
-      GPIO_LED_2 => open
+      GPIO_LED_2 => axi_c2c_link_error
     );
 
     --Rtl accelerator created by vivado HLS

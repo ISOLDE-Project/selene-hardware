@@ -116,7 +116,7 @@ architecture rtl of noelvcore is
 
   constant nextmst  : integer := 1;
 
-  constant nextslv  : integer := 3
+  constant nextslv  : integer := 4 -- +1 for c2c
 -- pragma translate_off
   + 1
 -- pragma translate_on
@@ -361,7 +361,8 @@ begin
           narrow_acc_mode => 0,
           vendor          => VENDOR_GAISLER,
           device          => GAISLER_MIG_7SERIES,
-          bar0            => ahb2ahb_membar(L2C_HADDR, '1', '1', L2C_HMASK)
+          bar0            => ahb2ahb_membar(L2C_HADDR, '1', '1', L2C_HMASK),
+          bar1            => ahb2ahb_membar(C2C_HADDR, '1', '1', C2C_HMASK) --added for c2c
           )
         port map (
           rstn  => rstn,
