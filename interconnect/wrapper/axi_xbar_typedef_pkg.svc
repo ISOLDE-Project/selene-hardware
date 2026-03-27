@@ -33,7 +33,7 @@ import axi_pkg::*;
 package axi_xbar_typedef_pkg;
 #ifdef SYNTHESIS 
   parameter int unsigned NoMasters         =  CFG_AXI_N_INITIATORS;
-  parameter int unsigned NoSlaves          =  1; 
+  parameter int unsigned NoSlaves          =  2; 
   parameter int unsigned AxiIdWidthSlaves  =  $clog2(CFG_AXI_N_INITIATORS);
   parameter int unsigned AxiIdWidthMasters =  AxiIdWidthSlaves + AxiIdWidthSlaves;
   parameter int unsigned AxiIdUsed         =  3; // Has to be <= AxiIdWidthMasters
@@ -48,7 +48,7 @@ package axi_xbar_typedef_pkg;
   parameter logic [9:0]   LatencyMode        = 0; //Not used 
   parameter int unsigned  AxiIdWidthSlvPorts = AxiIdWidthSlaves; 
   parameter int unsigned  AxiIdUsedSlvPorts  = 1;
-  parameter int unsigned  NoAddrRules        = 1;	
+  parameter int unsigned  NoAddrRules        = 2;	
  
   typedef logic [AxiIdWidthMasters-1:0] id_mst_t;
   typedef logic [AxiIdWidthSlaves-1:0]  id_slv_t;
