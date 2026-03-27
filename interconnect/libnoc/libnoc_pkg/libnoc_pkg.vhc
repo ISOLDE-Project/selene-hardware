@@ -39,7 +39,7 @@ package libnoc_pkg is
   constant AxiAddrWidth       : integer := 32;
   constant AxiDataWidth       : integer := 128;
   constant AxiMaxDataWidth    : integer := 512;
-  constant NoAddrRules        : integer := 1;	
+  constant NoAddrRules        : integer := 2;	
 
   -- some more constant declaration for needed typedefs
   constant AxiIdWidthMasters : integer :=  AxiIdWidthSlvPorts+AxiIdWidthSlvPorts;
