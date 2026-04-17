@@ -47,7 +47,7 @@ package axi_xbar_typedef_pkg;
   parameter logic         FallThrough        = 0;  
   parameter logic [9:0]   LatencyMode        = 0; //Not used 
   parameter int unsigned  AxiIdWidthSlvPorts = AxiIdWidthSlaves; 
-  parameter int unsigned  AxiIdUsedSlvPorts  = 1;
+  parameter int unsigned  AxiIdUsedSlvPorts  = 3;
   parameter int unsigned  NoAddrRules        = 2;	
  
   typedef logic [AxiIdWidthMasters-1:0] id_mst_t;

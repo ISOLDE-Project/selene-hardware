@@ -35,7 +35,7 @@ package libnoc_pkg is
   constant FallThrough : std_logic := '0'; 
   constant LatencyMode : std_logic_vector(9 downto 0) := "0000000000"; --Not used overwritten by xbar_wrapper.sv
   constant AxiIdWidthSlvPorts : integer := integer(ceil(log2(real(CFG_AXI_N_INITIATORS))));   
-  constant AxiIdUsedSlvPorts  : integer := 1;
+  constant AxiIdUsedSlvPorts  : integer := 3;
   constant AxiAddrWidth       : integer := 32;
   constant AxiDataWidth       : integer := 128;
   constant AxiMaxDataWidth    : integer := 512;
