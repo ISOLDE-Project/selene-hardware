@@ -259,10 +259,14 @@ architecture rtl of selene_core is
   signal mem_sniff_coreID_write_serving_int : std_ulogic_vector(MEM_SNIFF_CORES_VECTOR_DEEP - 1 downto 0);
   
   --dummy signals
-  signal dummy_m_awregion : std_logic_vector(3 downto 0);
-  signal dummy_m_arregion : std_logic_vector(3 downto 0);
-  signal dummy_s_awregion : std_logic_vector(3 downto 0);
-  signal dummy_s_arregion : std_logic_vector(3 downto 0);
+  --signal dummy_m_awregion : std_logic_vector(3 downto 0);
+  --signal dummy_m_arregion : std_logic_vector(3 downto 0);
+  --signal dummy_s_awregion : std_logic_vector(3 downto 0);
+  --signal dummy_s_arregion : std_logic_vector(3 downto 0);
+
+  --intermediate signals
+  signal c2c_m_awlock : std_logic_vector(0 downto 0);
+  signal c2c_m_arlock : std_logic_vector(0 downto 0);
 
     
     --| XXXX XXXX    XXXX XX      X        X         X
@@ -405,8 +409,13 @@ FFI_GEN: if (FAULT_INJECTOR_ENABLE = 1) generate
 end generate;
 
 
+  --dummy_s_awregion <= (others => '0');
+  --dummy_s_arregion <= (others => '0');
+  --dummy_m_awregion <= (others => '0');
+  --dummy_m_arregion <= (others => '0');
 
-
+  initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.lock <= c2c_m_awlock(0);
+  initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.lock <= c2c_m_arlock(0);
   
   ----------------------------------------------------------------------
   --- SYSTEMS CONNECTIONS ----------------------------------------------
@@ -639,7 +648,8 @@ end generate;
       s_axi_awlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).aw.lock,
       s_axi_awprot    => target_aximo(CFG_AXI_N_TARGETS-1).aw.prot,
       s_axi_awqos     => target_aximo(CFG_AXI_N_TARGETS-1).aw.qos,
-      s_axi_awregion  => dummy_s_awregion,
+      --s_axi_awregion  => dummy_s_awregion,
+      s_axi_awregion  => (others => '0'),
       -- W
       s_axi_wdata   => target_aximo(CFG_AXI_N_TARGETS-1).w.data,
       s_axi_wstrb   => target_aximo(CFG_AXI_N_TARGETS-1).w.strb,
@@ -662,7 +672,8 @@ end generate;
       s_axi_arlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).ar.lock,
       s_axi_arprot    => target_aximo(CFG_AXI_N_TARGETS-1).ar.prot,
       s_axi_arqos     => target_aximo(CFG_AXI_N_TARGETS-1).ar.qos,
-      s_axi_arregion  => dummy_s_arregion,
+      --s_axi_arregion  => dummy_s_arregion,
+      s_axi_arregion  => (others => '0'),
       -- R
       s_axi_rdata   => target_aximi(CFG_AXI_N_TARGETS-1).r.data,
       s_axi_rresp   => target_aximi(CFG_AXI_N_TARGETS-1).r.resp,
@@ -682,9 +693,10 @@ end generate;
       -- REQUIRED EXTRA SIGNALS
       M_AXI_awcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.cache,
       M_AXI_awprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.prot,
-      M_AXI_awlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.lock,
+      M_AXI_awlock    => c2c_m_awlock,
       M_AXI_awqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.qos,
-      M_AXI_awregion  => dummy_m_awregion,
+      --M_AXI_awregion  => dummy_m_awregion,
+      M_AXI_awregion  => open,
       -- W
       M_AXI_wdata   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.data,
       M_AXI_wstrb   => initiator_aximo(CFG_AXI_N_INITIATORS-1).w.strb,
@@ -705,9 +717,10 @@ end generate;
       -- REQUIRED EXTRA SIGNALS
       M_AXI_arcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.cache,
       M_AXI_arprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.prot,
-      M_AXI_arlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.lock,
+      M_AXI_arlock    => c2c_m_arlock,
       M_AXI_arqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.qos,
-      M_AXI_arregion  => dummy_m_arregion,   
+      --M_AXI_arregion  => dummy_m_arregion,
+      M_AXI_arregion  => open,   
       -- R
       M_AXI_rdata   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.data,
       M_AXI_rresp   => initiator_aximi(CFG_AXI_N_INITIATORS-1).r.resp,

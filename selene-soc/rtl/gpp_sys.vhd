@@ -378,6 +378,7 @@ begin
           vendor          => VENDOR_GAISLER,
           device          => GAISLER_AHB2AXI,
           bar0            => ahb2ahb_membar(16#000#, '1', '1', 16#800#),
+          bar1            => ahb2ahb_membar(16#A00#, '1', '1', 16#FF0#), --added for c2c, whole 16 MB region
           ncpu            => ncpu
           )
         port map (
