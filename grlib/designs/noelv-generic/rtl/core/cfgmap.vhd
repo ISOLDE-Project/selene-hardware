@@ -37,7 +37,7 @@ package cfgmap is
   constant L2C_HADDR        : integer := 16#000#;
   constant L2C_HMASK        : integer := 16#800#;
   constant C2C_HADDR        : integer := 16#A00#; -- for c2c
-  constant C2C_HMASK        : integer := 16#FFF#; -- for c2c
+  constant C2C_HMASK        : integer := 16#FF0#; -- for c2c
   constant L2C_IOADDR       : integer := 16#FF0#;
   constant MEM_HADDR        : integer := 16#000#;
   constant MEM_HMASK        : integer := 16#800#;

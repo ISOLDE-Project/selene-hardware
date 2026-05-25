@@ -132,7 +132,8 @@ package config is
   constant CFG_L2_EDAC : integer := 0;
   constant CFG_L2_AXI : integer := 1;
   -- L2 Cache Lite
-  constant CFG_L2CL_EN : integer := 1;
+  --constant CFG_L2CL_EN : integer := 1;
+  constant CFG_L2CL_EN : integer := 0;
   constant CFG_L2CL_SIZE : integer := 128;
   constant CFG_L2CL_WAYS : integer := 4;
   constant CFG_L2CL_REPL : integer := 0;
