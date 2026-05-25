@@ -58,7 +58,17 @@ VLOGOPT=-mixedsvvh
 VHDLOPT=-mixedsvvh
 
 # GRLIB Options
-VSIMOPT= work.glbl -gdisas=1 -L secureip -L unisims_ver 
+VSIMOPT= work.glbl -gdisas=1 -L secureip -L unisims_ver
+
+# C2C
+VSIMOPT+= -L xil_defaultlib -L axi_chip2chip_v5_0_9 -L xpm \
+          -L generic_baseblocks_v2_1_0 -L fifo_generator_v13_2_5 \
+          -L axi_data_fifo_v2_1_21 -L axi_infrastructure_v1_1_0 \
+          -L axi_register_slice_v2_1_22 -L axi_protocol_converter_v2_1_22 \
+          -L axi_clock_converter_v2_1_21 -L blk_mem_gen_v8_4_4 \
+          -L axi_dwidth_converter_v2_1_22 -L lib_cdc_v1_0_2 \
+          -L proc_sys_reset_v5_0_13
+
 
 # GRETH options
 ifeq ($(SIM_SGMII),y)
@@ -190,6 +200,7 @@ selene-sim:
 #	make install-secureip; \
 #	make install-unimacro; \
 #	make map_xilinx_7series_lib; \
+	make comp_c2c; \
 	make sim;
 
 tb_sim:
@@ -223,6 +234,120 @@ comp_mem:
 	mkdir ./modelsim/mem_model; \
 	cp -f ./mem_model/* ./modelsim/mem_model/ ; \
 	vmap -modelsimini ./modelsim.ini mem_model ./modelsim/mem_model ;
+
+comp_c2c:
+	vlib modelsim/xpm ;\
+	vlib modelsim/axi_chip2chip_v5_0_9 ;\
+	vlib modelsim/xil_defaultlib ;\
+	vlib modelsim/generic_baseblocks_v2_1_0 ;\
+	vlib modelsim/fifo_generator_v13_2_5 ;\
+	vlib modelsim/axi_data_fifo_v2_1_21 ;\
+	vlib modelsim/axi_infrastructure_v1_1_0 ;\
+	vlib modelsim/axi_register_slice_v2_1_22 ;\
+	vlib modelsim/axi_protocol_converter_v2_1_22 ;\
+	vlib modelsim/axi_clock_converter_v2_1_21 ;\
+	vlib modelsim/blk_mem_gen_v8_4_4 ;\
+	vlib modelsim/axi_dwidth_converter_v2_1_22 ;\
+	vlib modelsim/lib_cdc_v1_0_2 ;\
+	vlib modelsim/proc_sys_reset_v5_0_13 ;\
+	vmap -modelsimini ./modelsim.ini xpm ./modelsim/xpm ;\
+	vmap -modelsimini ./modelsim.ini axi_chip2chip_v5_0_9 ./modelsim/axi_chip2chip_v5_0_9 ;\
+	vmap -modelsimini ./modelsim.ini xil_defaultlib ./modelsim/xil_defaultlib ;\
+	vmap -modelsimini ./modelsim.ini generic_baseblocks_v2_1_0 ./modelsim/generic_baseblocks_v2_1_0 ;\
+	vmap -modelsimini ./modelsim.ini fifo_generator_v13_2_5 ./modelsim/fifo_generator_v13_2_5 ;\
+	vmap -modelsimini ./modelsim.ini axi_data_fifo_v2_1_21 ./modelsim/axi_data_fifo_v2_1_21 ;\
+	vmap -modelsimini ./modelsim.ini axi_infrastructure_v1_1_0 ./modelsim/axi_infrastructure_v1_1_0 ;\
+	vmap -modelsimini ./modelsim.ini axi_register_slice_v2_1_22 ./modelsim/axi_register_slice_v2_1_22 ;\
+	vmap -modelsimini ./modelsim.ini axi_protocol_converter_v2_1_22 ./modelsim/axi_protocol_converter_v2_1_22 ;\
+	vmap -modelsimini ./modelsim.ini axi_clock_converter_v2_1_21 ./modelsim/axi_clock_converter_v2_1_21 ;\
+	vmap -modelsimini ./modelsim.ini blk_mem_gen_v8_4_4 ./modelsim/blk_mem_gen_v8_4_4 ;\
+	vmap -modelsimini ./modelsim.ini axi_dwidth_converter_v2_1_22 ./modelsim/axi_dwidth_converter_v2_1_22 ;\
+	vmap -modelsimini ./modelsim.ini lib_cdc_v1_0_2 ./modelsim/lib_cdc_v1_0_2 ;\
+	vmap -modelsimini ./modelsim.ini proc_sys_reset_v5_0_13 ./modelsim/proc_sys_reset_v5_0_13 ;\
+	vlog -work xpm -64 -sv \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/tools/Vivado/2020.2/data/ip/xpm/xpm_cdc/hdl/xpm_cdc.sv" \
+		"/icd/home/uic18097/isolde/tools/Vivado/2020.2/data/ip/xpm/xpm_fifo/hdl/xpm_fifo.sv" \
+		"/icd/home/uic18097/isolde/tools/Vivado/2020.2/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv" ;\
+	vcom -work xpm -64 -93 \
+		"/icd/home/uic18097/isolde/tools/Vivado/2020.2/data/ip/xpm/xpm_VCOMP.vhd" ;\
+	vlog -work axi_chip2chip_v5_0_9 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d493/hdl/axi_chip2chip_v5_0_rfs.v" ;\
+	vlog -work xil_defaultlib -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_axi_chip2chip_0_0/sim/c2c_master_ip_axi_chip2chip_0_0.v" ;\
+	vlog -work generic_baseblocks_v2_1_0 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/b752/hdl/generic_baseblocks_v2_1_vl_rfs.v" ;\
+	vlog -work fifo_generator_v13_2_5 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/276e/simulation/fifo_generator_vlog_beh.v" ;\
+	vcom -work fifo_generator_v13_2_5 -64 -93 \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/276e/hdl/fifo_generator_v13_2_rfs.vhd" ;\
+	vlog -work fifo_generator_v13_2_5 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/276e/hdl/fifo_generator_v13_2_rfs.v" ;\
+	vlog -work axi_data_fifo_v2_1_21 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/54c0/hdl/axi_data_fifo_v2_1_vl_rfs.v" ;\
+	vlog -work axi_infrastructure_v1_1_0 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl/axi_infrastructure_v1_1_vl_rfs.v" ;\
+	vlog -work axi_register_slice_v2_1_22 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/af2c/hdl/axi_register_slice_v2_1_vl_rfs.v" ;\
+	vlog -work axi_protocol_converter_v2_1_22 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/5cee/hdl/axi_protocol_converter_v2_1_vl_rfs.v" ;\
+	vlog -work axi_clock_converter_v2_1_21 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/1304/hdl/axi_clock_converter_v2_1_vl_rfs.v" ;\
+	vlog -work blk_mem_gen_v8_4_4 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/2985/simulation/blk_mem_gen_v8_4.v" ;\
+	vlog -work axi_dwidth_converter_v2_1_22 -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/2394/hdl/axi_dwidth_converter_v2_1_vl_rfs.v" ;\
+	vlog -work xil_defaultlib -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_axi_dwidth_converter_0_0/sim/c2c_master_ip_axi_dwidth_converter_0_0.v" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_axi_dwidth_converter_1_0/sim/c2c_master_ip_axi_dwidth_converter_1_0.v" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_axi_protocol_convert_0_0/sim/c2c_master_ip_axi_protocol_convert_0_0.v" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_clk_wiz_0_0/c2c_master_ip_clk_wiz_0_0_clk_wiz.v" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_clk_wiz_0_0/c2c_master_ip_clk_wiz_0_0.v" ;\
+	vcom -work lib_cdc_v1_0_2 -64 -93 \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ef1e/hdl/lib_cdc_v1_0_rfs.vhd" ;\
+	vcom -work proc_sys_reset_v5_0_13 -64 -93 \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/8842/hdl/proc_sys_reset_v5_0_vh_rfs.vhd" ;\
+	vcom -work xil_defaultlib -64 -93 \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ip/c2c_master_ip_proc_sys_reset_0_0/sim/c2c_master_ip_proc_sys_reset_0_0.vhd" ;\
+	vlog -work xil_defaultlib -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/sim/c2c_master_ip.v" ;\
+	vlog -work work -64 \
+		"./vivado/noelv-xilinx-vcu118/noelv-xilinx-vcu118.gen/sources_1/ip/c2c_master_ip_wrapper_0/sim/c2c_master_ip_wrapper_0.v"
+	vlog -work work -64 \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/ec67/hdl" \
+		"+incdir+/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/ipshared/d0f7" \
+		"/icd/home/uic18097/isolde/git/selene-hardware/c2c/myproj/project_1.gen/sources_1/bd/c2c_master_ip/hdl/c2c_master_ip_wrapper.v" ;\
+	vlog -work work -64 \
+		"./vivado/noelv-xilinx-vcu118/noelv-xilinx-vcu118.gen/sources_1/ip/c2c_master_ip_wrapper_0/sim/c2c_master_ip_wrapper_0.v"
 
 
 #### Synthesis ###

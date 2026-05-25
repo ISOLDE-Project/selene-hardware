@@ -47,7 +47,7 @@ use safety.librv.all;
 use work.selene.all;
 use work.config.all;
 
-library xil_defaultlib;
+-- library xil_defaultlib;
 
 entity selene_core is
   generic(
@@ -264,6 +264,13 @@ architecture rtl of selene_core is
   signal dummy_s_awregion : std_logic_vector(3 downto 0);
   signal dummy_s_arregion : std_logic_vector(3 downto 0);
 
+  --intermediate signals
+  signal c2c_arlock : std_logic_vector(0 downto 0);
+  signal c2c_awlock : std_logic_vector(0 downto 0);
+  signal c2c_s_arlock : std_logic_vector(0 downto 0);
+  signal c2c_s_awlock : std_logic_vector(0 downto 0);
+
+
     
     --| XXXX XXXX    XXXX XX      X        X         X
     --| ---------    -------    ------   ------    ------
@@ -405,7 +412,11 @@ FFI_GEN: if (FAULT_INJECTOR_ENABLE = 1) generate
 end generate;
 
 
-
+  --connect them
+  c2c_arlock(0) <= initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.lock;
+  c2c_awlock(0) <= initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.lock;
+  c2c_s_arlock(0) <= target_aximo(CFG_AXI_N_TARGETS-1).ar.lock;
+  c2c_s_awlock(0) <= target_aximo(CFG_AXI_N_TARGETS-1).aw.lock;
 
   
   ----------------------------------------------------------------------
@@ -608,7 +619,7 @@ end generate;
         axi_to_initiator    => xbar_l_aximi
     );  
 
-  c2c : entity xil_defaultlib.c2c_master_ip_wrapper_0
+  c2c : entity work.c2c_master_ip_wrapper_0
     port map (    
       ------------------------------------------------------------------
       -- Clock & Reset
@@ -636,7 +647,7 @@ end generate;
       s_axi_awready => target_aximi(CFG_AXI_N_TARGETS-1).aw.ready,
       -- REQUIRED EXTRA SIGNALS
       s_axi_awcache   => target_aximo(CFG_AXI_N_TARGETS-1).aw.cache,
-      s_axi_awlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).aw.lock,
+      s_axi_awlock    => c2c_s_awlock,
       s_axi_awprot    => target_aximo(CFG_AXI_N_TARGETS-1).aw.prot,
       s_axi_awqos     => target_aximo(CFG_AXI_N_TARGETS-1).aw.qos,
       s_axi_awregion  => dummy_s_awregion,
@@ -659,7 +670,7 @@ end generate;
       s_axi_arready => target_aximi(CFG_AXI_N_TARGETS-1).ar.ready,
       -- REQUIRED EXTRA SIGNALS
       s_axi_arcache   => target_aximo(CFG_AXI_N_TARGETS-1).ar.cache,
-      s_axi_arlock(0) => target_aximo(CFG_AXI_N_TARGETS-1).ar.lock,
+      s_axi_arlock    => c2c_s_arlock,
       s_axi_arprot    => target_aximo(CFG_AXI_N_TARGETS-1).ar.prot,
       s_axi_arqos     => target_aximo(CFG_AXI_N_TARGETS-1).ar.qos,
       s_axi_arregion  => dummy_s_arregion,
@@ -682,7 +693,7 @@ end generate;
       -- REQUIRED EXTRA SIGNALS
       M_AXI_awcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.cache,
       M_AXI_awprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.prot,
-      M_AXI_awlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.lock,
+      M_AXI_awlock    => c2c_awlock,
       M_AXI_awqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).aw.qos,
       M_AXI_awregion  => dummy_m_awregion,
       -- W
@@ -705,7 +716,7 @@ end generate;
       -- REQUIRED EXTRA SIGNALS
       M_AXI_arcache   => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.cache,
       M_AXI_arprot    => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.prot,
-      M_AXI_arlock(0) => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.lock,
+      M_AXI_arlock    => c2c_arlock,
       M_AXI_arqos     => initiator_aximo(CFG_AXI_N_INITIATORS-1).ar.qos,
       M_AXI_arregion  => dummy_m_arregion,   
       -- R

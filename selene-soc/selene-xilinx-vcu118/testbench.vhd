@@ -165,6 +165,16 @@ architecture behav of testbench is
   signal dsuctsn        : std_ulogic;
   signal dsurtsn        : std_ulogic;
 
+  -- C2C physical link signals (around your other signal declarations)
+  signal c2c_rx_data      : std_logic_vector(14 downto 0) := (others => '0');
+  signal c2c_rx_clk_p     : std_logic := '0';
+  signal c2c_rx_clk_n     : std_logic := '1';
+  signal c2c_tx_data      : std_logic_vector(14 downto 0);
+  signal c2c_tx_clk_p     : std_logic;
+  signal c2c_tx_clk_n     : std_logic;
+  --signal c2c_link_status  : std_logic;
+  --signal c2c_link_error   : std_logic;
+
   signal ddr4_ck        : std_logic_vector(1 downto 0);
   signal ddr4_dq        : std_logic_vector(63 downto 0);
   signal ddr4_dqs_c     : std_logic_vector(7 downto 0);
@@ -289,11 +299,23 @@ begin
       can_rx            => can_rx,
       can_stb           => can_stb,--connected to gnd by
                              --the pad
-    -- RS-485 interfaces
+      -- RS-485 interfaces
       uart485_rsde      => uart485_rsde,
       uart485_rsre      => uart485_rsre,
       uart485_rstx      => uart485_rstx,
       uart485_rsrx      => uart485_rsrx,
+
+      -- AXI C2C Physical Link
+      axi_c2c_selio_rx_data_in_0        => c2c_rx_data,
+      axi_c2c_selio_rx_diff_clk_in_p_0  => c2c_rx_clk_p,
+      axi_c2c_selio_rx_diff_clk_in_n_0  => c2c_rx_clk_n,
+      axi_c2c_selio_tx_data_out_0       => c2c_tx_data,
+      axi_c2c_selio_tx_diff_clk_out_p_0 => c2c_tx_clk_p,
+      axi_c2c_selio_tx_diff_clk_out_n_0 => c2c_tx_clk_n,
+      -- C2C LEDs
+      --axi_c2c_link_status                => c2c_link_status,
+      --axi_c2c_link_error                 => c2c_link_error,
+
       -- DDR4
       ddr4_dq           => ddr4_dq,
       ddr4_dqs_c        => ddr4_dqs_c,
@@ -1129,6 +1151,28 @@ begin
       txc(dsutx, 16#c0#, txp);
       txa(dsutx, 16#FE#, 16#00#, 16#00#, 16#40#, txp);
       txa(dsutx, 16#00#, 16#00#, 16#00#, 16#01#, txp);
+
+      -- some random address
+      print("-- Time: " & time'image(now) & " Write Adr=0xD0000 = DEADBEAF");
+      txc(dsutx, 16#c0#, txp); -- write command
+      txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#00#, txp); -- set address 0xD0000
+      txa(dsutx, 16#DE#, 16#AD#, 16#BE#, 16#AF#, txp); -- write data DEADBEAF
+
+      txc(dsutx, 16#80#, txp); -- read command
+      txa(dsutx, 16#00#, 16#0D#, 16#00#, 16#00#, txp); -- set address 0xD0000
+      rxi(dsurx, w32, txp, lresp); -- read data
+      print("-- Time: " & time'image(now) &  " Read Adr=0xD0000 = " & tost(w32));
+
+      -- c2c address
+      print("-- Time: " & time'image(now) & " Write Adr=0xA0010000 = CAFEBABE");
+      txc(dsutx, 16#c0#, txp); -- write command
+      txa(dsutx, 16#A0#, 16#01#, 16#00#, 16#00#, txp); -- C2C base address 0xA0010000
+      txa(dsutx, 16#CA#, 16#FE#, 16#BA#, 16#BE#, txp); -- write data CAFEBABE
+
+      txc(dsutx, 16#80#, txp); -- read command
+      txa(dsutx, 16#A0#, 16#01#, 16#00#, 16#00#, txp); -- C2C base address 0xA0010000
+      rxi(dsurx, w32, txp, lresp);
+      print("-- Time: " & time'image(now) & " Read Adr=0xA0010000 = " & tost(w32));
 
       print("-- Halt all of the cores");
     
