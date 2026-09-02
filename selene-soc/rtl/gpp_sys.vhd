@@ -357,7 +357,7 @@ begin
         cached   => conv_std_logic_vector(CFG_L2CL_MAP, 16),
         be_dw    => 128)
       port map (
-        rstn         => rstn,
+        rstn        => rstn,
         clk         => clkm,
         ahbsi       => ahbsi,
         ahbso       => ahbso(hsidx_l2c),  --ahbso(1)
