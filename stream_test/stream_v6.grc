@@ -1,0 +1,117 @@
+set OUTDIR "/home/uic18097/isolde/git/selene/selene-hardware/stream_test"
+
+puts "========================================"
+puts " SELENE C2C Continuous Capture 224x224 "
+puts "========================================"
+
+set frame_idx 0
+set MAX_FRAMES 10000
+
+puts "Starting capture loop..."
+
+while {$frame_idx < $MAX_FRAMES} {
+
+    puts ""
+    puts "--- Frame $frame_idx ---"
+
+    # --- [1] Reset VDMA S2MM ---
+    wmem 0xA0010030 0x00000004
+
+    # --- [2] Start VDMA (Run mode) ---
+    wmem 0xA0010030 0x00000001
+
+    # --- [3] Set REG_INDEX = 0 ---
+    wmem 0xA0010044 0x00000000
+
+    # --- [4] & [5] Set SA1 / SA2 (alternate every 5 frames) ---
+    if {$frame_idx % 5 == 0} {
+
+	    if {$frame_idx % 10 == 5} {
+		puts {--- [4] Set SA1 (frame buffer 1 in CAM DDR) ---}
+		wmem 0xA00100AC 0x90000000
+	    } else {
+		puts {--- [4] Set SA1 (frame buffer 1 in CAM DDR) ---}
+		wmem 0xA00100AC 0x90018800
+	    }
+
+    	puts {--- [5] Set SA2 (frame buffer 2 - dummy) ---}
+    	wmem 0xA00100B0 0x9000C400
+
+    } else {
+    	# --- [4] Set SA1 (frame buffer 1 in SELENE DDR) ---
+    	wmem 0xA00100AC 0x40000000
+
+    	# --- [5] Set SA2 (frame buffer 2 - dummy) ---
+    	wmem 0xA00100B0 0x4000C400
+    }
+
+    # --- [6] STRIDE = 224 bytes ---
+    wmem 0xA00100A8 0x000000E0
+
+    # --- [7] HSIZE = 224 bytes ---
+    wmem 0xA00100A4 0x000000E0
+
+    # --- [8] VSIZE = 224 lines → TRIGGERS DMA! ---
+    wmem 0xA00100A0 0x000000E0
+
+    # --- [9] img2axis: DATA_PORT = 0x81000000 ---
+    wmem 0xA0018010 0x81000000
+
+    # --- [10] img2axis: FRAME_CNT = 1 ---
+    wmem 0xA0018018 0x00000001
+
+    # --- [11] img2axis: END_OF_STREAM = 1 ---
+    wmem 0xA0018020 0x00000001
+
+    # --- [12] img2axis: ap_start! ---
+    wmem 0xA0018000 0x00000001
+
+    # --- [13] Poll HLS until done (expect 0x0000000e = idle+done+ready) ---
+    set ready 0
+    set tries 0
+    while {!$ready && $tries < 500} {
+        set result [mem 0xA0018000 1]
+        if {$result eq "0x0000000e"} {
+            set ready 1
+        } else {
+            after 10
+            incr tries
+        }
+    }
+
+    if {!$ready} {
+        puts "WARNING: Frame $frame_idx - HLS timed out after $tries polls, skipping!"
+        incr frame_idx
+        continue
+    }
+
+    puts "  HLS done after $tries polls"
+
+    # --- [14] Check VDMA status ---
+    set vdma_status [mem 0xA0010034 1]
+    puts "  VDMA status: $vdma_status"
+
+    # --- [15] Clear VDMA frame interrupt ---
+    wmem 0xA0010034 0x00001000
+
+    # --- [16] Short settle delay after clearing interrupt ---
+    after 50
+
+    # --- [17] Dump full frame (50176 bytes = 224 x 224) ---
+    set filename [format "%s/frame_%04d.bin" $OUTDIR $frame_idx]
+    dump -binary 0x40000000 50176 $filename
+    puts "  Captured: $filename"
+
+    incr frame_idx
+
+
+}
+
+puts ""
+puts "========================================"
+puts " Capture complete! $MAX_FRAMES frames "
+puts " Run: python3 extract_frame.py          "
+puts "========================================"
+
+quit
+
