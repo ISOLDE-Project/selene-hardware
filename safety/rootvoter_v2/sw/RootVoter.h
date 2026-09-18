@@ -279,7 +279,7 @@ typedef struct {
 //Returns: 0 if sync successful, 1 otherwise
 int RVC_sync(RootVoterDescriptor* RVC, uint64_t BASEADR);
 
-//Clears RV cell registers
+
 //Sets RV configuration (voting mode and timeout)
 //after execution RV cell remains in wait_datasets state
 //Returns: 0 if reset successful, 1 otherwise
@@ -294,6 +294,11 @@ VoteResult RVC_vote(RootVoterDescriptor* RVC);
 
 //Logs VoteResult to console
 void print_vote_result(VoteResult* v);
+
+//Clears RV cell registers
+int RVC_clear(RootVoterDescriptor* RVC);
+
+void ListRegisters(RootVoterDescriptor* RVC);
 
 
 #endif

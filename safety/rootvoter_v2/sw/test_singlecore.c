@@ -41,6 +41,8 @@ int main()
     RVC_load_dataset(&RVC0, 1, 0xf1f2f3f4cafebabe);    
     RVC_load_dataset(&RVC0, 2, 0xf1f2f3f4cafebabe);    
     res = RVC_vote(&RVC0);
+    ListRegisters(&RVC0);
+    RVC_clear(&RVC0);
     print_vote_result(&res);
 
 
@@ -51,6 +53,7 @@ int main()
     RVC_load_dataset(&RVC0, 0, 0xa1a2a3a4a5a6a7a8);    //assume only core-0 and core-1 have loaded their datasets
     RVC_load_dataset(&RVC0, 1, 0xa1a2a3a4a5a6a7a8);    
     res = RVC_vote(&RVC0);
+    RVC_clear(&RVC0);
     print_vote_result(&res);
     
     
@@ -60,6 +63,7 @@ int main()
     RVC_reset(&RVC0, 0x23, 1000);
     RVC_load_dataset(&RVC0, 1, 0xc1c2c3c4c5c6c7c8);    //assume only core-1 has loaded its dataset
     res = RVC_vote(&RVC0);
+    RVC_clear(&RVC0);
     print_vote_result(&res);
     
     
@@ -72,6 +76,7 @@ int main()
     RVC_load_dataset(&RVC0, 1, 0x1112131415161718);    //assume core-1 loads invalid dataset 
     RVC_load_dataset(&RVC0, 2, 0xf1f2f3f4f5f6f7f8);    
     res = RVC_vote(&RVC0);
+    RVC_clear(&RVC0);
     print_vote_result(&res);
     
 

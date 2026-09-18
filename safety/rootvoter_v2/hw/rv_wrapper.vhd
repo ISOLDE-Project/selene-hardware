@@ -21,7 +21,8 @@ entity rv_wrapper is
       rst_n:            in  std_logic;
       axi_in:   in  axi_mosi_type;
       axi_out:  out axi_somi_type;
-      interrupt:        out std_logic
+      interrupt:        out std_logic;
+      reg_probe_out: out std_logic_vector(REG_DATA_WIDTH-1 downto 0)
    );   
 end entity;
 
@@ -96,8 +97,10 @@ rv_inst : rootvoter
     S_AXI_BVALID_o  => rv_slv_out.s_axi_control_bvalid,
     S_AXI_BREADY_i  => rv_slv_in.s_axi_control_bready,
     S_AXI_BRESP_o   => rv_slv_out.s_axi_control_bresp,
-    INTERRUPT       => interrupt    
+    INTERRUPT       => interrupt,
+    REG_PROBE_OUT   => reg_probe_out
   );
 
 
 end;
+

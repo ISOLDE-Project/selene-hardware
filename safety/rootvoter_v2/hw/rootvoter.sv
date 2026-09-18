@@ -270,8 +270,8 @@ module rootvoter
     output wire [1:0]                    S_AXI_RRESP_o,
     output wire                          S_AXI_RVALID_o,
     input  wire                          S_AXI_RREADY_i,
-    output wire                          INTERRUPT // or whatever output the rootvoter produces
-
+    output wire                          INTERRUPT, // or whatever output the rootvoter produces
+    output wire [REG_DATA_WIDTH-1:0]     REG_PROBE_OUT
 );
     
     localparam WRITE_LOW_ADR = 0;
@@ -280,9 +280,15 @@ module rootvoter
     localparam CMD_ADR       = 31;
     localparam ADR_MASK = { {(C_S_AXI_ADDR_WIDTH-8){1'b0}}, {8{1'b1}} };
     
-    localparam READ_LOW_ADR = WRITE_HIGH_ADR + 1;
+    //localparam READ_LOW_ADR = WRITE_HIGH_ADR + 1;
     localparam READ_REG_NUM = 5;
-    localparam READ_HIGH_ADR = READ_LOW_ADR + READ_REG_NUM-1;
+    localparam READ_LOW_ADR = 0;
+    localparam READ_HIGH_ADR = WRITE_REG_NUM + READ_REG_NUM-1;
+
+
+
+
+
 
     localparam TOTAL_REGS = WRITE_REG_NUM + READ_REG_NUM; 
 
@@ -584,8 +590,11 @@ module rootvoter
           read_address = axi_araddr[ADDR_MSB:ADDR_LSB];         
           reg_data_out ={C_S_AXI_DATA_WIDTH{1'b0}};
           //check if the address is out of the range of R registers
-          if(read_address >= READ_LOW_ADR && read_address <= READ_HIGH_ADR) begin
-            reg_data_out ={AXI_ALIGN_FACTOR{read_reg[read_address-READ_LOW_ADR]}};
+          if(read_address >= 0 && read_address <= WRITE_REG_NUM-1) begin
+            reg_data_out ={AXI_ALIGN_FACTOR{slv_reg[read_address]}};
+          end
+          else if(read_address >= WRITE_REG_NUM && read_address <= WRITE_REG_NUM+READ_REG_NUM-1) begin
+            reg_data_out ={AXI_ALIGN_FACTOR{read_reg[read_address-WRITE_REG_NUM]}};
           end
     end
     // Output register or memory read data
@@ -629,6 +638,7 @@ assign read_reg[1] = match_vector[119:64];
 assign read_reg[2] = {32'h55555555, {(REG_DATA_WIDTH-56){1'b0}}, state_internal};
 assign read_reg[3] = {{(REG_DATA_WIDTH-40){1'b0}}, status};
 
+assign REG_PROBE_OUT = slv_reg[0];
 
 RVCell #(.RVC_ID(RVC_ID),
          .REG_DATA_WIDTH(REG_DATA_WIDTH), 

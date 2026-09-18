@@ -158,27 +158,21 @@ ifeq ($(CFG_HLSINF_EN), 1)
 	@echo "HLSinf accelerator is not instanciated on simulation"
 endif
 
-patch_selene: patch_grlib
+patch_selene: patch_grlib 
 
-unpatch_selene: unpatch_grlib unpatch_ffi
+unpatch_selene: unpatch_grlib
 
 patch_grlib:
-	- patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/HWquota.patch;\
-	patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/xlnx_vivado.patch;
+	- patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/amba.patch; \
+	patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/xlnx_vivado.patch; \
+	patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/submodules.patch;	
 
 unpatch_grlib:
-	- patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/HWquota.patch;\
-	patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/xlnx_vivado.patch;
+	- patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/amba.patch; \
+	patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/xlnx_vivado.patch; \
+	patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/submodules.patch;
 
 
-patch_ffi:
-	- patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/HWquota.patch;\
-	patch --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/FFI.patch;
-
-		
-unpatch_ffi:
-	- patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/HWquota.patch;\
-	patch --reverse --forward -d $(GRLIB)/.. -p1 -i selene-soc/rtl/GRLIB_patches/FFI.patch;
 
 
 selene-sim:
@@ -251,14 +245,6 @@ selene-vivado: patch_selene cp-xci-files
 	make vivado;
 
 selene-vivado-launch: patch_selene cp-xci-files
-	make fix_vivado;\
-	make vivado-launch;
-
-selene-vivado-ffi: patch_ffi cp-xci-files
-	make fix_vivado;\
-	make vivado;
-        
-selene-vivado-launch-ffi: patch_ffi cp-xci-files
 	make fix_vivado;\
 	make vivado-launch;
 

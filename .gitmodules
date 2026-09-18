@@ -13,3 +13,6 @@
 [submodule "accelerators/HLSinf"]
 	path = accelerators/HLSinf
 	url = https://github.com/PEAK-UPV/HLSinf.git
+[submodule "safety/SafeTI/bsc_safeti"]
+	path = safety/SafeTI/bsc_safeti
+	url = https://github.com/bsc-loca/SafeTI.git

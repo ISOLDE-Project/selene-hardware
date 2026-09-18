@@ -73,7 +73,17 @@ int RVC_reset(RootVoterDescriptor* RVC, uint8_t mode, uint64_t max_wait_time){
     return(0);
 }
 
-
+int RVC_clear(RootVoterDescriptor* RVC){
+    volatile uint64_t* voter_base = RVC->base_adr;
+    *(voter_base+31) = 0xF;
+    volatile uint64_t state_reg = *(voter_base+19);
+    uint8_t FSM_state = state_reg&0x1F;
+    if(FSM_state != 0x1){
+        printf("RVC_reset: FSM reset failure\n");
+        return(1);
+    }
+    return(0);
+}
 
 
 //Loads a dataset to the set[dataset_id] register of RVC
@@ -147,6 +157,19 @@ VoteResult RVC_vote(RootVoterDescriptor* RVC){
     }   
     return(res);
 }
+
+
+
+
+void ListRegisters(RootVoterDescriptor* RVC){
+    volatile uint64_t* voter_base = RVC->base_adr;
+    volatile uint64_t regval = 0;
+    for(int i=0;i<5;i++){
+        regval = *(voter_base + i);
+        printf("RVC reg[%2d]=%08x\n", i, regval);
+    }
+}
+
 
 
 

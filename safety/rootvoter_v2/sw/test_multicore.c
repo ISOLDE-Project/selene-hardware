@@ -16,11 +16,14 @@
 
 
 /* some stack for your processors */
-uint64_t thestack[16][4096];
+uint64_t thestack[4][4096 / 8];
 
 volatile int * RES_PTR;
 int RES_ARR[3][RES_ITEMS];
 RootVoterDescriptor RVC0;
+
+
+
 
 
 int main(void)

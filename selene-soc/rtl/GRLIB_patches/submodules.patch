@@ -1,0 +1,14 @@
+diff --git a/safety/SafeTI/bsc_safeti/hdl/platform_wrappers/SELENE/injector_axi4_SELENE.vhd b/safety/SafeTI/bsc_safeti/hdl/platform_wrappers/SELENE/injector_axi4_SELENE.vhd
+index 896ce46..db43a68 100644
+--- a/safety/SafeTI/bsc_safeti/hdl/platform_wrappers/SELENE/injector_axi4_SELENE.vhd
++++ b/safety/SafeTI/bsc_safeti/hdl/platform_wrappers/SELENE/injector_axi4_SELENE.vhd
+@@ -169,7 +169,8 @@ begin  -- rtl
+   --apbi_inj.tinen    <= apbi.testin(apbi_inj.tinen'range) when (NTESTINBITS => 3) else (apbi_inj.tinen'high downto NTESTINBITS => '0') & apbi.testin;
+   -- APB Slave output from the injectors
+   apbo.prdata       <= apbo_inj.rdata;
+-  apbo.pirq(pirq)   <= apbo_inj.irq;
++  --apbo.pirq(pirq)   <= apbo_inj.irq;
++    apbo.pirq   <= (pirq => apbo_inj.irq, others => '0');
+   apbo.pindex       <= pindex;
+   apbo.pconfig      <= pconfig;
+ 

@@ -70,7 +70,7 @@ entity io_sys is
     ahbso      : out ahb_slv_out_vector_type(0 downto 0);
     ahbsov_pnp : in  ahb_slv_out_vector;
     --APB BUS
-    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 + CFG_GRDMAC2 downto 0);
+    apbi       : in  apb_slv_in_vector_type(5 + (CFG_SPW_NUM * CFG_SPW_EN) + CFG_GRCANFD1 + CFG_GRCANFD2 + CFG_UART2_ENABLE*2 + CFG_GRDMAC2 + CFG_AXI_SAFETI_EN downto 0);
     apbo       : out apb_slv_out_vector;
     --AHBJTAG
     tck        : in  std_ulogic;
@@ -200,7 +200,7 @@ architecture rtl of io_sys is
   constant pidx_apbuart485_0    : integer := pidx_canfd2 + CFG_UART2_ENABLE;
 
   constant pidx_dma     : integer := pidx_apbuart485_0 + CFG_UART2_ENABLE + CFG_GRDMAC2;
-  constant pidx_total   : integer := pidx_dma + 1;
+  constant pidx_total   : integer := pidx_dma + CFG_AXI_SAFETI_EN + 1;
 
   --IOMMU
   -- System burst length in 32-bit words
@@ -374,7 +374,14 @@ begin
       generic map (defmast => CFG_DEFMST, split => CFG_SPLIT,
                    rrobin  => CFG_RROBIN, ioaddr => 0,iomask => 0,cfgaddr => 0, cfgmask => 0, fpnpen => 0,
                    ioen    => 0, nahbm => IO_NAHBM, nahbs => 1)
-      port map (rstn, clkm, io_ahbmi, io_ahbmo, io_ahbsi, io_ahbso);
+      port map (
+		  rst => rstn, 
+		  clk => clkm, 
+		  msti => io_ahbmi, 
+		  msto => io_ahbmo, 
+		  mst_valid => (others => '1'),
+		  slvi => io_ahbsi, 
+		  slvo => io_ahbso);
 
     -----------------------------------------------------------------------
     ---  AT AHB MST -------------------------------------------------------
@@ -915,7 +922,7 @@ begin
                                            pirq     => pidx_apbuart485_0,
                                            parity   => 1,
                                            flow     => 0,
-                                           fifosize => 1, --uart485_fifo_sizes(0),
+                                           fifosize => CFG_UART2_FIFO, --uart485_fifo_sizes(0),
                                            abits    => 8,
                                            sbits    => 12)
                               port map (rst   => rstn,
@@ -932,7 +939,7 @@ begin
                                            pirq     => (pidx_apbuart485_0 + 1),
                                            parity   => 1,
                                            flow     => 0,
-                                           fifosize => 1, --uart485_fifo_sizes(1),
+                                           fifosize => CFG_UART2_FIFO, --uart485_fifo_sizes(1),
                                            abits    => 8,
                                            sbits    => 12)
                               port map (rst   => rstn,

@@ -42,7 +42,7 @@ library accelerators;
 use accelerators.conv_pkg.all;
 library safety; 
 use safety.librv.all;
-
+use safety.injector_pkg_SELENE.all;
 
 use work.selene.all;
 use work.config.all;
@@ -141,6 +141,7 @@ architecture rtl of selene_core is
   component FFICTR is
   port (
     clk_in : in STD_LOGIC;
+    dcm_locked_0 : in STD_LOGIC;
     reset : in STD_LOGIC;
     CLK_O_0 : out STD_LOGIC;
     RST_O_0 : out STD_LOGIC;
@@ -172,9 +173,18 @@ architecture rtl of selene_core is
 
   --System APB slave indexes
   constant apbstart_io  : integer := 0;  --AHBUART+GRETH+SGMII+GPIO+GRVERSION+AHBSTAT+(CFG_SPW_NUM * CFG_SPW_EN)
-  constant apbstart_mem : integer := apbstart_io + 6 + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + CFG_UART2_ENABLE*2 + CFG_GRDMAC2;  --No APB slaves in mem_sys now
+  constant pidx_safeti  : integer := apbstart_io + 6 + (CFG_SPW_NUM * CFG_SPW_EN) + (CFG_GRCANFD1 + CFG_GRCANFD2) + CFG_UART2_ENABLE*2 + CFG_GRDMAC2;  --No APB slaves in mem_sys now
+  constant apbstart_mem : integer := pidx_safeti + CFG_AXI_SAFETI_EN;
   constant apbstart_gpp : integer := apbstart_mem;
-  
+
+  --System AXI manager indexes
+  constant axistart_gpp : integer := 0;
+  constant axid_acc     : integer := axistart_gpp + 1; -- AHB2AXI from gpp_sys
+  constant axid_safeti  : integer := axid_acc + CFG_AXI_N_ACCELERATORS;
+  constant axistart_mem : integer := axid_safeti + CFG_AXI_SAFETI_EN;
+  constant axistart_io  : integer := axistart_mem;
+
+
   -----------------------------------------------------
   -- Signals ------------------------------------------
   -----------------------------------------------------
@@ -237,7 +247,7 @@ architecture rtl of selene_core is
 
     signal ffi_clk : STD_LOGIC;
     signal ffi_rst : STD_LOGIC;
-    signal ffi_gpio_in : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal ffi_gpio_in : STD_LOGIC_VECTOR ( 63 downto 0 );
     signal rstboardn      : std_ulogic;
 
   --mem_monitor wires from mem_sys to gpp--
@@ -257,9 +267,10 @@ architecture rtl of selene_core is
     --| Device Types:
     --      0x0 - None (empty slot)
     --      0xA - RootVoter
-    --      0xB - HSL accelerator     
-    --      0xC - SafeSU 
-    --      0xD - SafeDE 
+    --      0xB - HSL accelerator
+    --      0xC - SafeSU
+    --      0xD - SafeDE
+    --      0x10 - SafeTI AXI
     function format_HWInfo(
             Enabled : integer;
             BaseAddress: std_logic_vector;
@@ -320,8 +331,26 @@ architecture rtl of selene_core is
         end if;
         return result;
     end format_safeSU_Features;
-    
-  
+
+    function format_safeTI_Features(
+            Enabled         : integer;
+            AXIindex        : integer;
+            dbits           : integer;
+            Max_transf_size : integer
+        ) return std_logic_vector is
+            variable result: std_logic_vector(19 downto 0) := X"00000";
+        begin
+
+        if(Enabled > 0) then
+            result :=   x"00" &
+                        std_logic_vector(to_unsigned(AXIindex,        4)) &
+                        std_logic_vector(to_unsigned(dbits,           4)) &
+                        std_logic_vector(to_unsigned(Max_transf_size, 4));
+        end if;
+        return result;
+    end format_safeTI_Features;
+
+
 begin
 
   ----------------------------------------------------------------------
@@ -349,7 +378,7 @@ begin
   
   
   def_clk_gen : if (CFG_MIG_7SERIES = 1) generate
-    clkm    <= mig_clkout;
+    clkm    <= ffi_clk when USE_FFI_CLOCK = 1 else mig_clkout;
     gen_clk <= mig_clkout;
   end generate;
   
@@ -378,10 +407,11 @@ FFI_GEN: if (FAULT_INJECTOR_ENABLE = 1) generate
     FFICORE: component FFICTR
          port map (
             clk_in => gen_clk,
+			dcm_locked_0 => clk_lock,
             reset => rst,
             CLK_O_0 => ffi_clk,
             RST_O_0 => ffi_rst,
-            GPIO_EXT(31 downto 0) => ffi_gpio_in
+            GPIO_EXT(31 downto 0) => ffi_gpio_in(31 downto 0)
         );
         
 end generate;
@@ -456,10 +486,10 @@ end generate;
     -- Clock and Reset
       clkinp       => clkinp,
       clkinn       => clkinn,
-      rstn         => rstn,
+      rstn         => rstboardn,
       rstraw       => rstraw,
       mig_clkout   => mig_clkout,
-      clkin        => clkm,
+      clkin        => gen_clk,
       ahbsi        => mem_ahbsi,
       ahbso        => mem_ahbso,
       apbo         => mem_apbo,
@@ -620,7 +650,8 @@ end generate;
           rst_n     => rstn, 
           axi_in    => accel_l_aximo(1), 
           axi_out   => accel_l_aximi(1), 
-          interrupt => rv_interrupt(0) -- not used yet
+          interrupt => rv_interrupt(0), -- not used yet
+		  reg_probe_out => ffi_gpio_in
         );  
     end generate;
 
@@ -820,9 +851,36 @@ end generate;
     target_aximi(0)    <= mem_aximi; 
     mem_aximo          <= target_aximo(0); 
 
-    gpp_aximi          <= initiator_aximi(0);
-    initiator_aximo(0) <= gpp_aximo; 
-     
+    AXI_SafeTI_EN : for x in 0 to CFG_AXI_SAFETI_EN-1 generate
+      AXI_SafeTI : injector_axi4_SELENE
+        generic map (
+          MAX_SIZE_BURST  => sel(16*AXIDW/8, 4096, simulation = true), -- Limit to 16 beats on simulation
+          tech            => fabtech,
+          pindex          => pidx_safeti + x,
+          paddr           => 16#850# + x,
+          pmask           => 16#FFF#,
+          pirq            => pidx_safeti + x,
+          ID_R_WIDTH      => AXI_ID_WIDTH,
+          ID_W_WIDTH      => AXI_ID_WIDTH,
+          ADDR_WIDTH      => initiator_aximo(axid_safeti + x).aw.addr'length,
+          DATA_WIDTH      => AXIDW,
+          axi_cache       => "0011",
+          axi_prot        => "001",
+          axi_qos         => "0000"
+        )
+        port map (
+          rstn            => rstn,
+          clk             => clkm,
+          apbi            => io_apbi(pidx_safeti + x),
+          apbo            => io_apbo(pidx_safeti + x),
+          axi4mi          => initiator_aximi(axid_safeti + x),
+          axi4mo          => initiator_aximo(axid_safeti + x)
+        );
+    end generate AXI_SafeTI_EN;
+
+    gpp_aximi          <= initiator_aximi(axistart_gpp);
+    initiator_aximo(0) <= gpp_aximo;
+
 
     --HWInf descriptors for SELENE-specific modules
     --AxiRom is present in the design if sync word (0xFFFC0000) equals 0xAACC5577
@@ -839,8 +897,7 @@ end generate;
         x"0000000000000000" &
         x"0000000000000000" &
         x"0000000000000000" &
-        x"0000000000000000" &
-        
+
         -- Template for appenging HWInfo descriptors for new cores
         -- format_HWInfo(
                     -- CORE_ENABLE_FLAG (1/0 - core is present/absent in this SoC),
@@ -850,9 +907,14 @@ end generate;
                     -- CORE_VERSION (integer: 4 bits),
                     -- CORE_DEVICE_TYPE (integer: 4 bits)
         -- )
-       
-        --HWInfo for SafeDE 
-        format_HWInfo(CFG_SAFEDE_EN,X"FC000500", 
+
+        --HWInfo for SafeTI
+        format_HWInfo(CFG_AXI_SAFETI_EN,X"FC085000",
+                        format_safeTI_Features(CFG_AXI_SAFETI_EN, axid_safeti, log2ext(AXIDW), log2ext(sel(1+(16-1)*AXIDW/8, 4096, simulation = true))),
+                        16#6#, 16#0#, 16#3#)& -- Don't know about CORE_DEVICE_TYPE
+
+        --HWInfo for SafeDE
+        format_HWInfo(CFG_SAFEDE_EN,X"FC000500",
                         X"00000",
                         16#6#, CFG_SAFEDE_VERSION,16#4#)& 
 
