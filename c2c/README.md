@@ -44,6 +44,10 @@ This creates and opens the Vivado project. Follow the sections below before star
 
 ## Chip2Chip IP Block Design Packaging
 
+Note: 
+  A directory with the packaged IP was also added in c2c, where the TCL and README are located. 
+  In case it doesn't work for you please follow the steps below!
+
 The TCL script `create_c2c_bd.tcl` already creates a Vivado project with the AXI Chip2Chip block design.
 
 ### Step 1 — Open the Project
