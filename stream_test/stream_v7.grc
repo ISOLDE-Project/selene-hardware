@@ -58,13 +58,13 @@ while {$frame_idx < $MAX_FRAMES} {
 	wmem 0xA002005C 0x92000000
 
 	puts {--- [6] Set MM2S SA2 dummy ---}
-	wmem 0xA0020060 0x92000040
+	wmem 0xA0020060 0x92000100
 
-	puts {--- [7] MM2S STRIDE = 64 bytes ---}
-	wmem 0xA0020058 0x00000040
+	puts {--- [7] MM2S STRIDE = 256 bytes ---}
+	wmem 0xA0020058 0x00000100
 
-	puts {--- [8] MM2S HSIZE = 64 bytes ---}
-	wmem 0xA0020054 0x00000040
+	puts {--- [8] MM2S HSIZE = 256 bytes ---}
+	wmem 0xA0020054 0x00000100
 
 	puts ""
 	puts {--- [9] Reset VDMA S2MM ---}
@@ -86,11 +86,11 @@ while {$frame_idx < $MAX_FRAMES} {
 	puts {--- [14] Set S2MM DA2 dummy ---}
 	wmem 0xA00200B0 0x5000C400
 
-	puts {--- [15] S2MM STRIDE = 64 bytes ---}
-	wmem 0xA00200A8 0x00000040
+	puts {--- [15] S2MM STRIDE = 256 bytes ---}
+	wmem 0xA00200A8 0x00000100
 
-	puts {--- [16] S2MM HSIZE = 64 bytes ---}
-	wmem 0xA00200A4 0x00000040
+	puts {--- [16] S2MM HSIZE = 256 bytes ---}
+	wmem 0xA00200A4 0x00000100
 
 	puts ""
 	puts {--- [17] ARM S2MM VSIZE = 1 ---}
@@ -118,9 +118,9 @@ while {$frame_idx < $MAX_FRAMES} {
 
 	puts ""
 	puts {--- [23] Dump full frame ---}
-	dump -binary 0x50000000 64 embeding_data.bin
+	dump -binary 0x50000000 256 embeding_data.bin
 	set filename1 [format "%s/embeding_data_frame_%04d.bin" $OUTDIR $frame_idx]
-    	dump -binary 0x50000000 64 $filename1
+    	dump -binary 0x50000000 256 $filename1
 
 	puts ""
 	puts "========================================"
