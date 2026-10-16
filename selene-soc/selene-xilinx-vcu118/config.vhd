@@ -325,8 +325,8 @@ package config is
 
 -- AXI xbar configuration
 --The following line "CFG_AXI_N_INITIATORS" must not contain labels, logic operations or comments due to preprocesor scripts
---the current value "7" corresponds to 1(gpp) + 6 (HLSinf have 6 ports)
-  constant CFG_AXI_N_INITIATORS : integer := 8;
+--the current value "9" corresponds to 1(gpp) + 6(HLSinf have 6 ports) + 1(CFG_AXI_SAFETI_EN) + 1(C2C)
+  constant CFG_AXI_N_INITIATORS : integer := 9;
   constant CFG_AXI_N_TARGETS : integer := 2;
 -- AXI LITE xbar configuration
   constant CFG_AXI_LITE_N_INITIATORS : integer := 1;
